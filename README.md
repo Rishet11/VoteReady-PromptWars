@@ -34,7 +34,7 @@ graph TD
     B -->|No Match| D[State Picker Modal]
     C --> E[User clicks Register]
     E --> F[API Route /api/guidance]
-    F --> G[Gemini 3 Flash (Preview)]
+    F --> G["Gemini 3 Flash (Preview)"]
     G --> H[Personalized Guidance UI]
     C --> I[Google Maps Embed API]
     I --> J[Live Polling Station View]
