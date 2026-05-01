@@ -34,7 +34,7 @@ graph TD
     B -->|No Match| D[State Picker Modal]
     C --> E[User clicks Register]
     E --> F[API Route /api/guidance]
-    F --> G[Gemini 2.0 Flash]
+    F --> G[Gemini 3 Flash (Preview)]
     G --> H[Personalized Guidance UI]
     C --> I[Google Maps Embed API]
     I --> J[Live Polling Station View]
@@ -44,7 +44,7 @@ graph TD
 
 ## 🛠️ Tech Stack & Google Services
 
-### 1. **Google Gemini 2.0 Flash**
+### 1. **Google Gemini 3 Flash (Preview)**
 We use Gemini's high-speed reasoning to interpret election deadlines and provide human-readable "Next Steps" for the voter. It handles complex logic like calculating verification timelines and explaining form types (Form 6, 7, 8) in plain language.
 
 ### 2. **Google Cloud Run**
