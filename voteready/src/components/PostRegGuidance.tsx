@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bot, AlertCircle, RefreshCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StateElectionData } from '@/data/electionData';
@@ -14,7 +14,7 @@ export function PostRegGuidance({ stateData, className }: PostRegGuidanceProps) 
   const [error, setError] = useState<boolean>(false);
   const [isFallback, setIsFallback] = useState<boolean>(false);
 
-  const fetchGuidance = async () => {
+  const fetchGuidance = useCallback(async () => {
     setLoading(true);
     setError(false);
     try {
@@ -35,18 +35,18 @@ export function PostRegGuidance({ stateData, className }: PostRegGuidanceProps) 
       if (data.fallback) {
         setIsFallback(true);
       }
-    } catch (err) {
-      console.error(err);
+      // Intentionally prefixed with _ to indicate unused error parameter
+    } catch (_err) {
       setError(true);
     } finally {
       setLoading(false);
     }
-  };
+  }, [stateData.code]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchGuidance();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stateData.code]);
+  }, [fetchGuidance]);
 
   return (
     <div className={cn("bg-indigo-50 border border-indigo-100 rounded-xl p-5 md:p-6", className)}>
@@ -65,7 +65,7 @@ export function PostRegGuidance({ stateData, className }: PostRegGuidanceProps) 
       ) : error ? (
         <div className="bg-white/60 rounded-lg p-4 flex flex-col items-center justify-center text-center gap-3">
           <AlertCircle className="w-8 h-8 text-red-500 opacity-80" />
-          <p className="text-sm text-gray-700">We couldn't load your personalized guidance right now.</p>
+          <p className="text-sm text-gray-700">We couldn&apos;t load your personalized guidance right now.</p>
           <button 
             onClick={fetchGuidance}
             className="flex items-center gap-1.5 text-sm font-medium text-indigo-700 hover:text-indigo-900 bg-indigo-100 px-3 py-1.5 rounded-full transition-colors"

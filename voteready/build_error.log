@@ -1,0 +1,79 @@
+
+> voteready@0.1.0 build
+> next build --webpack
+
+▲ Next.js 16.2.4 (webpack)
+
+  Creating an optimized production build ...
+Failed to compile.
+
+./app/globals.css.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[15].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[15].oneOf[10].use[3]!./app/globals.css
+Error: Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.
+    at Object.<anonymous> (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/@tailwindcss/oxide/index.js:559:11)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Module._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at mod.require (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/server/require-hook.js:79:28)
+    at require (node:internal/modules/helpers:147:16)
+
+Import trace for requested module:
+./app/globals.css.webpack[javascript/auto]!=!./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[15].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[15].oneOf[10].use[3]!./app/globals.css
+./app/globals.css
+
+./app/globals.css
+Error: Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.
+    at Object.<anonymous> (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/@tailwindcss/oxide/index.js:559:11)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Module._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at mod.require (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/server/require-hook.js:79:28)
+    at require (node:internal/modules/helpers:147:16)
+    at tryRunOrWebpackError (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:29:316134)
+    at __webpack_require_module__ (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:29:131536)
+    at __nested_webpack_require_161494__ (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:29:130971)
+    at /Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:29:131828
+    at symbolIterator (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/neo-async/async.js:1:14444)
+    at done (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/neo-async/async.js:1:14824)
+    at Hook.eval [as callAsync] (eval at create (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:14:9224), <anonymous>:15:1)
+    at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:14:6378)
+    at /Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:29:130691
+    at symbolIterator (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/neo-async/async.js:1:14402)
+-- inner error --
+Error: Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.
+    at Object.<anonymous> (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/@tailwindcss/oxide/index.js:559:11)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Module._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at mod.require (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/server/require-hook.js:79:28)
+    at require (node:internal/modules/helpers:147:16)
+    at Object.<anonymous> (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[15].oneOf[10].use[2]!/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[15].oneOf[10].use[3]!/Users/rishetmehra/Desktop/VoteReady/voteready/app/globals.css:1:7)
+    at /Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:29:962757
+    at Hook.eval [as call] (eval at create (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:14:9002), <anonymous>:7:1)
+    at Hook.CALL_DELEGATE [as _call] (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:14:6272)
+    at /Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:29:131569
+    at tryRunOrWebpackError (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:29:316088)
+    at __webpack_require_module__ (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:29:131536)
+    at __nested_webpack_require_161494__ (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:29:130971)
+    at /Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/webpack/bundle5.js:29:131828
+    at symbolIterator (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/compiled/neo-async/async.js:1:14444)
+
+Generated code for /Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[15].oneOf[10].use[2]!/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[15].oneOf[10].use[3]!/Users/rishetmehra/Desktop/VoteReady/voteready/app/globals.css
+1 | throw new Error("Module build failed (from ./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js):\nError: Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.\n    at Object.<anonymous> (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/@tailwindcss/oxide/index.js:559:11)\n    at Module._compile (node:internal/modules/cjs/loader:1706:14)\n    at Module._extensions..js (node:internal/modules/cjs/loader:1839:10)\n    at Module.load (node:internal/modules/cjs/loader:1441:32)\n    at Module._load (node:internal/modules/cjs/loader:1263:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:328:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)\n    at Module.require (node:internal/modules/cjs/loader:1463:12)\n    at mod.require (/Users/rishetmehra/Desktop/VoteReady/voteready/node_modules/next/dist/server/require-hook.js:79:28)\n    at require (node:internal/modules/helpers:147:16)");
+
+Import trace for requested module:
+./app/globals.css
+
+
+> Build failed because of webpack errors

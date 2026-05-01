@@ -11,7 +11,7 @@ interface CtaButtonProps {
 export function CtaButton({ url, onClick, className }: CtaButtonProps) {
   const [isNavigating, setIsNavigating] = useState(false);
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleClick = () => {
     // Call the optional onClick handler (e.g. to show post-reg guidance)
     if (onClick) {
       onClick();
@@ -27,7 +27,7 @@ export function CtaButton({ url, onClick, className }: CtaButtonProps) {
   return (
     <div className={cn("flex flex-col items-center gap-3", className)}>
       <p className="text-[15px] font-medium text-emerald-700">
-        You're almost ready to vote.
+        You&apos;re almost ready to vote.
       </p>
       
       <a

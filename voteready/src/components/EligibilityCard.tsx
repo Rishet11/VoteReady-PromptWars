@@ -19,7 +19,7 @@ export function EligibilityCard({ stateData, className }: EligibilityCardProps) 
     >
       <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" aria-hidden="true" />
       <p className="text-sm md:text-base font-medium leading-relaxed">
-        You're eligible if you're an Indian citizen, 18+, and an ordinary resident of <strong>{stateData.name}</strong>.
+        You&apos;re eligible if you&apos;re an Indian citizen, 18+, and an ordinary resident of <strong>{stateData.name}</strong>.
       </p>
     </div>
   );

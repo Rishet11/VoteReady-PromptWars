@@ -70,7 +70,7 @@ export function StatePickerModal({ isOpen, onClose, onSelectState }: StatePicker
         {/* Body */}
         <div className="p-5">
           <p className="text-sm text-gray-600 mb-4">
-            We couldn't find your PIN code in our demo database. Please select your state directly:
+            We couldn&apos;t find your PIN code in our demo database. Please select your state directly:
           </p>
 
           <div className="space-y-2 max-h-[40vh] overflow-y-auto p-1">

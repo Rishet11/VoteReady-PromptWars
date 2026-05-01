@@ -11,13 +11,13 @@ import { PostRegGuidance } from "@/components/PostRegGuidance";
 import { ElectionTimeline } from "@/components/ElectionTimeline";
 import { ElectionGlossary } from "@/components/ElectionGlossary";
 import { SkipLink } from "@/components/SkipLink";
-import { pinToStateMap } from "@/data/pinToState";
+import { pinToStateMap, PollingPlace } from "@/data/pinToState";
 import { electionData, StateElectionData } from "@/data/electionData";
 import { CheckCircle2 } from "lucide-react";
 
 export default function Home() {
   const [activeState, setActiveState] = useState<StateElectionData | null>(null);
-  const [activePollingPlace, setActivePollingPlace] = useState<any | null>(null);
+  const [activePollingPlace, setActivePollingPlace] = useState<PollingPlace | null>(null);
   const [showStatePicker, setShowStatePicker] = useState(false);
   const [showGuidance, setShowGuidance] = useState(false);
 
@@ -106,7 +106,7 @@ export default function Home() {
                 {/* Registration Started state */}
                 <div className="flex items-center gap-3 p-4 bg-blue-50 text-blue-800 border border-blue-100 rounded-lg mb-6">
                   <CheckCircle2 className="w-5 h-5 text-blue-600" />
-                  <p className="font-medium">Heading to {activeState.name}'s registration portal.</p>
+                  <p className="font-medium">Heading to {activeState.name}&apos;s registration portal.</p>
                 </div>
                 
                 {/* Post Registration Guidance from Gemini */}
@@ -134,7 +134,7 @@ export default function Home() {
       <footer className="w-full bg-white border-t border-gray-200 py-8 px-4 mt-12 text-center text-sm text-gray-500">
         <div className="max-w-2xl mx-auto flex flex-col gap-2">
           <p>VoteReady — An Election Process Assistant</p>
-          <p>Data provided for demonstration purposes. Always refer to the <a href="https://voters.eci.gov.in/" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">official ECI website</a> for accurate information.</p>
+          <p>Data provided for demonstration purposes. Always refer to the <a href="https://voters.eci.gov.in/" className="text-blue-600 underline hover:no-underline" target="_blank" rel="noopener noreferrer">official ECI website</a> for accurate information.</p>
         </div>
       </footer>
 

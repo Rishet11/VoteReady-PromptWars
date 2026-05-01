@@ -12,8 +12,7 @@ export function ElectionTimeline({ className }: ElectionTimelineProps) {
       <h3 className="text-lg font-bold text-gray-900 mb-6">How The Process Works</h3>
       
       <div className="relative border-l-2 border-gray-100 ml-3 space-y-6">
-        {electionTimeline.map((step, index) => {
-          const isLast = index === electionTimeline.length - 1;
+        {electionTimeline.map((step) => {
           
           return (
             <div key={step.id} className="relative pl-6">

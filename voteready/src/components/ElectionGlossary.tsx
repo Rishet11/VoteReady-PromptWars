@@ -54,7 +54,7 @@ export function ElectionGlossary({ className }: ElectionGlossaryProps) {
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 italic col-span-full">No terms found matching "{searchTerm}".</p>
+              <p className="text-gray-500 italic col-span-full">No terms found matching &quot;{searchTerm}&quot;.</p>
             )}
           </div>
         </div>
