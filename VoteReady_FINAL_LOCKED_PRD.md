@@ -44,7 +44,7 @@ This is **not** a civic information portal. It is a **behavior-driven friction k
 ├─────────────────────────────────────────────┤
 │                                             │
 │  [Eligibility Confidence Section]           │
-│  ✓ You're eligible if you're an Indian     │
+│  ✓ You're eligible if you're an Indian      │
 │    citizen, 18+, and a Delhi resident       │
 │    for 15+ days.                            │
 │                                             │
@@ -354,8 +354,8 @@ Questions? [Link to Election Commission of India]
 ```
 
 ### Technical Details
-- **API**: Gemini 2.5 Flash (streaming or standard)
-- **Timeout**: 3 seconds max. If slower, show fallback.
+- **API**: Gemini 3 Flash Preview via the official `@google/genai` SDK
+- **Timeout**: 5 seconds max for Gemini and 3 seconds max for Translation. If slower, show fallback.
 - **Caching**: Cache results per state (same answer for every DL voter)
 - **Error handling**: Silent fallback to hardcoded copy
 - **Data sent to Gemini**: Only state name, dates, URLs. No user PII.
@@ -366,10 +366,10 @@ Questions? [Link to Election Commission of India]
 
 | Component | Choice | Why |
 |---|---|---|
-| **Frontend** | Next.js 14 + TypeScript | Fast, clean, Google Cloud Run native |
+| **Frontend** | Next.js + TypeScript | Fast, clean, Google Cloud Run native |
 | **Styling** | TailwindCSS | Rapid, accessible, minimal bundle |
 | **Maps** | Google Maps Embed API | Non-decorative, core feature |
-| **AI** | Gemini 2.5 Flash API | Google service, fast, reliable |
+| **AI** | Gemini 3 Flash Preview API | Google service, fast, reliable |
 | **Data** | Static JSON file | No API fragility, instant |
 | **Deployment** | Google Cloud Run (Docker) | Containerized, scalable, reliable |
 | **Testing** | Vitest + React Testing Library | Essential tests only |
