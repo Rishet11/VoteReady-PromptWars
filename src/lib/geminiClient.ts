@@ -23,5 +23,18 @@ export async function generateGuidance(systemInstruction: string, prompt: string
     },
   });
 
-  return response.text?.trim() || '';
+
+  const text = response.text?.trim() || '';
+  
+  if (text) {
+    console.info(JSON.stringify({
+      severity: 'INFO',
+      message: 'Gemini service heartbeat: Guidance generated',
+      service: 'gemini-3-flash',
+      status: 'success',
+      timestamp: new Date().toISOString(),
+    }));
+  }
+
+  return text;
 }

@@ -51,13 +51,27 @@ export async function translateText(
 
     if (response.translations && response.translations.length > 0) {
       const translatedText = response.translations[0].translatedText;
-      return translatedText
-        ? { text: translatedText, translated: true }
-        : { text, translated: false };
+      if (translatedText) {
+        console.info(JSON.stringify({
+          severity: 'INFO',
+          message: 'Translation service heartbeat: Text translated',
+          service: 'google-cloud-translation',
+          targetLanguage: targetLanguageCode,
+          status: 'success',
+          timestamp: new Date().toISOString(),
+        }));
+        return { text: translatedText, translated: true };
+      }
     }
 
     return { text, translated: false };
-  } catch {
+  } catch (error) {
+    console.warn(JSON.stringify({
+      severity: 'WARNING',
+      message: 'Translation service heartbeat: Fallback triggered',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    }));
     return { text, translated: false };
   }
 }

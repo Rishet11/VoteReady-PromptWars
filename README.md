@@ -115,3 +115,17 @@ Full search engine optimization with dynamic `sitemap.ts` and `robots.ts` for ma
 
 ---
 Built with ❤️ by **Rishet Mehra** for the **Google PromptWars** Hackathon.
+
+---
+
+## 🔗 Google Service Traceability Matrix (Judge's Guide)
+
+| Google Service | Implementation Logic | Production Verification |
+| :--- | :--- | :--- |
+| **Gemini 3 Flash** | `src/lib/geminiClient.ts` | Look for `Gemini service heartbeat` in Cloud Logging |
+| **Cloud Translation** | `src/lib/translate.ts` | Look for `Translation service heartbeat` in Cloud Logging |
+| **Maps Embed API** | `src/components/GoogleMapsEmbed.tsx` | Verified by `MapsIntegration.test.tsx` |
+| **Analytics 4** | `src/components/GoogleAnalytics.tsx` | Verified by `GoogleAnalytics.test.tsx` |
+| **Cloud Run** | `Dockerfile` | Deployment URL available in badges |
+| **Cloud Logging** | `src/app/api/guidance/route.ts` | Structured JSON severity logging (INFO/WARNING) |
+
