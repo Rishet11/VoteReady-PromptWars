@@ -15,7 +15,7 @@ Generate post-registration guidance for a voter who just submitted Form 6 in ${s
 Key facts:
 - Registration deadline: ${deadlineDate}
 - Election date: ${electionDate}
-- Processing time: Usually 2-3 weeks for verification by BLO (Booth Level Officer)
+- Processing time: 5 business days for verification by BLO (Booth Level Officer)
 - Card arrives: EPIC (Voter ID) sent via Speed Post after approval
 - Status check URL: ${verificationUrl}
 - e-EPIC download is available once approved

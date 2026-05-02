@@ -3,6 +3,7 @@ import { Bot, AlertCircle, RefreshCcw, Languages } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { StateElectionData } from '@/data/electionData';
 import { LanguageSelector } from './LanguageSelector';
+import { trackEvent } from './GoogleAnalytics';
 import type { SupportedLanguageCode } from '@/lib/languages';
 
 interface PostRegGuidanceProps {
@@ -30,6 +31,7 @@ export function PostRegGuidance({ stateData, className }: PostRegGuidanceProps) 
   const fetchGuidance = useCallback(async (targetLang: SupportedLanguageCode) => {
     setLoading(true);
     setError(false);
+    trackEvent('guidance_requested', 'engagement', targetLang);
 
     try {
       const response = await fetch('/api/guidance', {

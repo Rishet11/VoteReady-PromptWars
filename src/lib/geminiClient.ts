@@ -1,12 +1,17 @@
-import { GoogleGenAI } from '@google/genai';
+import { VertexAI } from '@google-cloud/vertexai';
 
 const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
+const location = 'asia-south1'; // Matches the region in the Cloud Run URL
 
-let genAI: GoogleGenAI | null = null;
+let vertexAI: VertexAI | null = null;
 
-function getGeminiClient() {
-  genAI ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-  return genAI;
+function getVertexClient() {
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
+  if (!projectId) {
+    throw new Error('GOOGLE_CLOUD_PROJECT_ID is not set');
+  }
+  vertexAI ??= new VertexAI({ project: projectId, location });
+  return vertexAI;
 }
 
 export function getGeminiModelName() {
@@ -14,17 +19,17 @@ export function getGeminiModelName() {
 }
 
 export async function generateGuidance(systemInstruction: string, prompt: string): Promise<string> {
-  const response = await getGeminiClient().models.generateContent({
+  const generativeModel = getVertexClient().getGenerativeModel({
     model: getGeminiModelName(),
-    contents: prompt,
-    config: {
-      systemInstruction,
+    systemInstruction,
+    generationConfig: {
       temperature: 0.3,
     },
   });
 
-
-  const text = response.text?.trim() || '';
+  const response = await generativeModel.generateContent(prompt);
+  const result = await response.response;
+  const text = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
   
   if (text) {
     console.info(JSON.stringify({

@@ -4,7 +4,7 @@
 
 [![Build](https://img.shields.io/badge/Build-Passing-success)](https://voteready-462604012263.asia-south1.run.app)
 [![Accessibility](https://img.shields.io/badge/A11y-jest--axe%20covered-blue)](https://voteready-462604012263.asia-south1.run.app)
-[![Tests](https://img.shields.io/badge/Tests-44%2F44%20Pass-success)](https://voteready-462604012263.asia-south1.run.app)
+[![Tests](https://img.shields.io/badge/Tests-51%2F51%20Pass-success)](https://voteready-462604012263.asia-south1.run.app)
 [![Cloud](https://img.shields.io/badge/Infrastructure-Google%20Cloud-blue)](https://cloud.google.com/run)
 
 VoteReady is an AI-powered election process assistant designed to maximize voter registration and participation in India. It simplifies the often-daunting ECI registration process by providing personalized, location-aware, and AI-generated guidance.
@@ -45,24 +45,16 @@ graph TD
 
 ---
 
-## 🛠️ Tech Stack & Google Services
+## 🏗️ Google Services Architecture
+VoteReady is built as a cloud-native application deeply integrated with the Google Cloud ecosystem. Our architecture leverages five distinct Google services across the entire user workflow:
 
-### 1. **Google Gemini 3 Flash (Preview)**
-We use Gemini's high-speed reasoning to interpret election deadlines and provide human-readable "Next Steps" for the voter. It handles complex logic like calculating verification timelines and explaining form types in plain language.
+1. **Google Gemini 3 Flash (Preview)**: Handles complex reasoning to interpret election deadlines and provide human-readable "Next Steps" for the voter.
+2. **Google Cloud Translation API**: Provides multi-language support (Hindi, Bengali, Telugu, Tamil) for AI-generated guidance.
+3. **Google Maps Embed API**: Visualizes polling station locations based on voter PIN codes.
+4. **Google Analytics 4 (GA4)**: Tracks custom engagement events (`lookup_pin`, `guidance_requested`, `map_opened`) to optimize the voter journey.
+5. **Google Cloud Run & Logging**: Hosts the application with structured JSON logging for auditability and scale.
 
-### 2. **Google Cloud Translation API**
-To serve India's linguistically diverse population, we integrate the Translation API to provide guidance in **Hindi, Bengali, Telugu, and Tamil** at the click of a button.
-
-### 3. **Google Analytics 4 (GA4)**
-Comprehensive event tracking (PIN lookups, registration clicks, language switches) provides behavioral insights to optimize the voter journey.
-
-### 4. **Google Cloud Run & Logging**
-Deployed on Cloud Run for scalability. The API emits structured JSON logs that are ready for Cloud Logging sinks, including BigQuery export if enabled in the Google Cloud project.
-
-### 5. **Google Maps Embed API**
-Transforms abstract polling station addresses into interactive visual maps.
-
-### 6. **Search & SEO (Sitemap/Robots)**
+### Search & SEO (Sitemap/Robots)
 Full search engine optimization with dynamic `sitemap.ts` and `robots.ts` for maximum reach.
 
 ---
@@ -122,10 +114,10 @@ Built with ❤️ by **Rishet Mehra** for the **Google PromptWars** Hackathon.
 
 | Google Service | Implementation Logic | Production Verification |
 | :--- | :--- | :--- |
-| **Gemini 3 Flash** | `src/lib/geminiClient.ts` | Look for `Gemini service heartbeat` in Cloud Logging |
-| **Cloud Translation** | `src/lib/translate.ts` | Look for `Translation service heartbeat` in Cloud Logging |
-| **Maps Embed API** | `src/components/GoogleMapsEmbed.tsx` | Verified by `MapsIntegration.test.tsx` |
-| **Analytics 4** | `src/components/GoogleAnalytics.tsx` | Verified by `GoogleAnalytics.test.tsx` |
+| **Gemini 3 Flash** | [`src/lib/geminiClient.ts`](src/lib/geminiClient.ts) | Look for `Gemini service heartbeat` in Cloud Logging |
+| **Cloud Translation** | [`src/lib/translate.ts`](src/lib/translate.ts) | Look for `Translation service heartbeat` in Cloud Logging |
+| **Maps Embed API** | [`src/components/GoogleMapsEmbed.tsx`](src/components/GoogleMapsEmbed.tsx) | Verified by `MapsIntegration.test.tsx` |
+| **Analytics 4** | [`src/components/GoogleAnalytics.tsx`](src/components/GoogleAnalytics.tsx) | Verified by `GoogleAnalytics.test.tsx` |
 | **Cloud Run** | `Dockerfile` | Deployment URL available in badges |
-| **Cloud Logging** | `src/app/api/guidance/route.ts` | Structured JSON severity logging (INFO/WARNING) |
+| **Cloud Logging** | [`src/app/api/guidance/route.ts`](src/app/api/guidance/route.ts) | Structured JSON severity logging (INFO/WARNING) |
 

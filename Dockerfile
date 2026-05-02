@@ -1,5 +1,8 @@
 FROM node:22-alpine AS base
 
+# NOTE: To minimize cold starts, it is recommended to set --min-instances=1 
+# when deploying this image to Google Cloud Run.
+
 # Install dependencies only when needed
 FROM base AS deps
 RUN apk add --no-cache libc6-compat

@@ -36,11 +36,11 @@ export default function Home() {
     if (mapping) {
       setActiveState(electionData[mapping.state]);
       setActivePollingPlace(mapping.pollingPlace);
-      trackEvent('pin_lookup', 'engagement', mapping.state);
+      trackEvent('lookup_pin', 'engagement', mapping.state);
     } else {
       // Show modal to pick state if PIN is not in our demo db
       setShowStatePicker(true);
-      trackEvent('pin_lookup_fail', 'engagement', 'unmapped_pin');
+      trackEvent('lookup_pin_fail', 'engagement', 'unmapped_pin');
     }
   }, []);
 
@@ -58,7 +58,7 @@ export default function Home() {
   return (
     <>
       <SkipLink />
-      
+
       {/* Header */}
       <header className="w-full bg-white border-b border-gray-200 py-4 px-4 shadow-sm sticky top-0 z-30">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
@@ -73,7 +73,7 @@ export default function Home() {
 
       {/* Main Content */}
       <main id="main-content" className="flex-1 w-full max-w-2xl mx-auto p-4 md:p-6 lg:p-8 flex flex-col gap-8">
-        
+
         {/* Intro */}
         <section className="text-center py-6 animate-fade-in">
           <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">
@@ -91,8 +91,8 @@ export default function Home() {
 
         {/* Dynamic Content based on State */}
         {activeState && (
-          <div className="flex flex-col gap-6 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            
+          <div className="flex flex-col gap-6">
+
             {/* 1. Eligibility */}
             <EligibilityCard stateData={activeState} />
 
@@ -102,8 +102,8 @@ export default function Home() {
             {/* 3. CTA */}
             {!showGuidance ? (
               <div className="py-6 flex justify-center">
-                <CtaButton 
-                  url={activeState.registrationUrl} 
+                <CtaButton
+                  url={activeState.registrationUrl}
                   onClick={handleRegisterClick}
                   className="w-full"
                 />
@@ -115,7 +115,7 @@ export default function Home() {
                   <CheckCircle2 className="w-5 h-5 text-blue-600" />
                   <p className="font-medium">Heading to {activeState.name}&apos;s registration portal.</p>
                 </div>
-                
+
                 {/* Post Registration Guidance from Gemini */}
                 <PostRegGuidance stateData={activeState} />
               </div>
@@ -146,8 +146,8 @@ export default function Home() {
       </footer>
 
       {/* State Picker Fallback */}
-      <StatePickerModal 
-        isOpen={showStatePicker} 
+      <StatePickerModal
+        isOpen={showStatePicker}
         onClose={() => setShowStatePicker(false)}
         onSelectState={handleStateSelect}
       />

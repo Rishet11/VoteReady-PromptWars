@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getEmbedUrl } from '@/lib/mapsUtils';
+import { trackEvent } from './GoogleAnalytics';
+import { useEffect } from 'react';
 
 interface GoogleMapsEmbedProps {
   lat: number;
@@ -13,6 +15,10 @@ interface GoogleMapsEmbedProps {
 export function GoogleMapsEmbed({ lat, lng, title, className }: GoogleMapsEmbedProps) {
   const [hasError, setHasError] = useState(false);
   const embedUrl = getEmbedUrl(lat, lng);
+
+  useEffect(() => {
+    trackEvent('map_opened', 'engagement', title);
+  }, [title]);
 
   if (hasError) {
     return (

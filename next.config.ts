@@ -47,13 +47,19 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains; preload',
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
         ],
       },
     ];
   },
   output: "standalone",
+  compress: true,
+  poweredByHeader: false,
 };
+
+if (process.env.K_SERVICE) {
+  console.log(`Running on Google Cloud Run: ${process.env.K_SERVICE}`);
+}
 
 export default nextConfig;
