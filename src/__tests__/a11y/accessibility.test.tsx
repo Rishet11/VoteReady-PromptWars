@@ -1,32 +1,48 @@
-import { describe, it } from 'vitest';
-import { render } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import { expect as vitestExpect } from 'vitest';
-import { EligibilityCard } from '@/components/EligibilityCard';
-import { DeadlineCard } from '@/components/DeadlineCard';
-import { CtaButton } from '@/components/CtaButton';
-import { electionData } from '@/data/electionData';
+import Home from '@/app/page';
 
-vitestExpect.extend(toHaveNoViolations);
+expect.extend(toHaveNoViolations);
 
-describe('Accessibility tests', () => {
-  const mockState = electionData['DL'];
-
-  it('EligibilityCard should have no accessibility violations', async () => {
-    const { container } = render(<EligibilityCard stateData={mockState} />);
+describe('Accessibility Audit', () => {
+  it('Home page should have no accessibility violations', async () => {
+    const { container } = render(<Home />);
     const results = await axe(container);
-    vitestExpect(results).toHaveNoViolations();
+    expect(results).toHaveNoViolations();
   });
 
-  it('DeadlineCard should have no accessibility violations', async () => {
-    const { container } = render(<DeadlineCard stateData={mockState} />);
+  it('active state view should have no accessibility violations', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-01T12:00:00Z'));
+    const { container, getByLabelText } = render(<Home />);
+
+    fireEvent.change(getByLabelText(/where are you registered/i), {
+      target: { value: '110001' },
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    vi.useRealTimers();
+
     const results = await axe(container);
-    vitestExpect(results).toHaveNoViolations();
+    expect(results).toHaveNoViolations();
   });
 
-  it('CtaButton should have no accessibility violations', async () => {
-    const { container } = render(<CtaButton url="https://voters.eci.gov.in" />);
+  it('state picker modal should have no accessibility violations', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-05-01T12:00:00Z'));
+    const { container, getByLabelText } = render(<Home />);
+
+    fireEvent.change(getByLabelText(/where are you registered/i), {
+      target: { value: '999999' },
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    vi.useRealTimers();
+
     const results = await axe(container);
-    vitestExpect(results).toHaveNoViolations();
+    expect(results).toHaveNoViolations();
   });
 });
