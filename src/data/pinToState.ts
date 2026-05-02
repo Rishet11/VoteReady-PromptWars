@@ -39,6 +39,18 @@ export const pinToStateMap: Record<string, PinStateMap> = {
       distance: 0.5
     }
   },
+  "110032": {
+    state: "DL",
+    pollingPlace: {
+      name: "Shahdara Govt School",
+      address: "Bholanath Nagar",
+      city: "Shahdara, Delhi",
+      pin: "110032",
+      lat: 28.6734,
+      lng: 77.2908,
+      distance: 0.6
+    }
+  },
   // Maharashtra PINs
   "400001": {
     state: "MH",

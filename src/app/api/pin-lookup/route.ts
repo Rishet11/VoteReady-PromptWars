@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { pinToStateMap, type PinStateMap } from "@/data/pinToState";
+import { pinToStateMap, type PinStateMap, type PollingPlace } from "@/data/pinToState";
 import { getCachedPin, setCachedPin } from "@/lib/firestoreCache";
 import { isValidPinCode } from "@/lib/sanitize";
+import { resolvePinToState } from "@/lib/geocoding";
 
 export const runtime = "nodejs";
 
@@ -49,18 +50,42 @@ export async function POST(request: Request) {
   }
 
   const mapping = pinToStateMap[pin];
-  if (!mapping) {
+  if (mapping) {
+    await setCachedPin(pin, mapping);
     return jsonResponse({
-      found: false,
+      found: true,
       cached: false,
+      mapping,
     });
   }
 
-  await setCachedPin(pin, mapping);
+  // Fallback: Universal Geocoding for ANY PIN in India
+  const dynamicLocation = await resolvePinToState(pin);
+  if (dynamicLocation) {
+    const dynamicMapping: PinStateMap = {
+      state: dynamicLocation.state,
+      pollingPlace: {
+        name: "General Polling Station Area",
+        address: dynamicLocation.formattedAddress,
+        city: "Located by PIN Code",
+        pin: pin,
+        lat: dynamicLocation.lat,
+        lng: dynamicLocation.lng,
+        distance: 0, // Reference point
+      },
+    };
+
+    await setCachedPin(pin, dynamicMapping);
+    
+    return jsonResponse({
+      found: true,
+      cached: false,
+      mapping: dynamicMapping,
+    });
+  }
 
   return jsonResponse({
-    found: true,
+    found: false,
     cached: false,
-    mapping,
   });
 }
