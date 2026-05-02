@@ -42,3 +42,15 @@ implementation_plan.md
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Graphify
+graphify-out/
+.agents/
+
+# Artifacts & Logs
+build_error.log
+lighthouse-report.html
+
+# Legacy Folders
+voteready/
+voteready-app/
