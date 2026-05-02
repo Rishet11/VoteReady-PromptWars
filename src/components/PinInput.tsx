@@ -46,6 +46,7 @@ export function PinInput({ onPinChange, className }: PinInputProps) {
       <div className="flex gap-2">
         <input
           id="pin-input"
+          data-testid="pin-input"
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"

@@ -3,6 +3,7 @@ import { getFirestore, Timestamp, type Firestore } from "firebase-admin/firestor
 
 export const PIN_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const PIN_CACHE_COLLECTION = "pinLookupCache";
+const FIRESTORE_CACHE_TIMEOUT_MS = 800;
 
 type FirestorePinDocument<T extends object> = {
   data: T;
@@ -71,6 +72,24 @@ function isSafePinDocument(data: unknown): data is FirestorePinDocument<object> 
   );
 }
 
+async function withFirestoreTimeout<T>(operation: Promise<T>): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error("Firestore cache operation timed out"));
+    }, FIRESTORE_CACHE_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([operation, timeout]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    operation.catch(() => undefined);
+  }
+}
+
 export async function getCachedPin<T extends object = Record<string, unknown>>(
   pin: string,
 ): Promise<T | null> {
@@ -80,7 +99,7 @@ export async function getCachedPin<T extends object = Record<string, unknown>>(
   }
 
   try {
-    const snapshot = await db.collection(PIN_CACHE_COLLECTION).doc(pin).get();
+    const snapshot = await withFirestoreTimeout(db.collection(PIN_CACHE_COLLECTION).doc(pin).get());
     if (!snapshot.exists) {
       return null;
     }
@@ -107,11 +126,13 @@ export async function setCachedPin(pin: string, data: object): Promise<void> {
   }
 
   try {
-    await db.collection(PIN_CACHE_COLLECTION).doc(pin).set({
-      data,
-      cachedAt: Timestamp.now(),
-      expiresAt: Timestamp.fromDate(new Date(Date.now() + PIN_CACHE_TTL_MS)),
-    });
+    await withFirestoreTimeout(
+      db.collection(PIN_CACHE_COLLECTION).doc(pin).set({
+        data,
+        cachedAt: Timestamp.now(),
+        expiresAt: Timestamp.fromDate(new Date(Date.now() + PIN_CACHE_TTL_MS)),
+      }),
+    );
   } catch (error) {
     console.warn("Firestore PIN cache write failed", {
       service: "firestore",

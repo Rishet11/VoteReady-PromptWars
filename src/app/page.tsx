@@ -147,7 +147,7 @@ export default function Home() {
 
         {/* Dynamic Content based on State */}
         {activeState && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6" data-testid="state-result">
 
             {/* 1. Eligibility */}
             <EligibilityCard stateData={activeState} />
