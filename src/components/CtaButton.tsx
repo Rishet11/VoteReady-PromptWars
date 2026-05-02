@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ExternalLink, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { trackEvent } from './GoogleAnalytics';
 
 interface CtaButtonProps {
   url: string;
@@ -12,11 +13,13 @@ export function CtaButton({ url, onClick, className }: CtaButtonProps) {
   const [isNavigating, setIsNavigating] = useState(false);
 
   const handleClick = () => {
+    trackEvent('register_click', 'conversion', url);
+
     // Call the optional onClick handler (e.g. to show post-reg guidance)
     if (onClick) {
       onClick();
     }
-    
+
     // Show brief loading state to give feedback before opening new tab
     setIsNavigating(true);
     setTimeout(() => {
@@ -29,7 +32,7 @@ export function CtaButton({ url, onClick, className }: CtaButtonProps) {
       <p className="text-[15px] font-medium text-emerald-700">
         You&apos;re almost ready to vote.
       </p>
-      
+
       <a
         href={url}
         target="_blank"
@@ -47,7 +50,7 @@ export function CtaButton({ url, onClick, className }: CtaButtonProps) {
           </>
         )}
       </a>
-      
+
       <p className="text-[13px] italic text-gray-500">
         Most people finish in under 2 minutes.
       </p>

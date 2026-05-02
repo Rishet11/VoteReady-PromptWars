@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type KeyboardEvent } from 'react';
 import { X, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { electionData } from '@/data/electionData';
@@ -12,23 +12,19 @@ interface StatePickerModalProps {
 export function StatePickerModal({ isOpen, onClose, onSelectState }: StatePickerModalProps) {
   const [selected, setSelected] = useState<string>('');
   const modalRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  // Handle escape key
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  // Focus trap could be added here for strict a11y, simplified for now
-  useEffect(() => {
-    if (isOpen && modalRef.current) {
-      modalRef.current.focus();
+    if (!isOpen) {
+      return;
     }
+
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    modalRef.current?.focus();
+
+    return () => {
+      previousFocusRef.current?.focus();
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -42,6 +38,35 @@ export function StatePickerModal({ isOpen, onClose, onSelectState }: StatePicker
     }
   };
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      onClose();
+      return;
+    }
+
+    if (event.key !== 'Tab' || !modalRef.current) {
+      return;
+    }
+
+    const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (!firstElement || !lastElement) {
+      return;
+    }
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+      event.preventDefault();
+      lastElement.focus();
+    } else if (!event.shiftKey && document.activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div 
@@ -50,6 +75,7 @@ export function StatePickerModal({ isOpen, onClose, onSelectState }: StatePicker
         aria-modal="true" 
         aria-labelledby="modal-title"
         tabIndex={-1}
+        onKeyDown={handleKeyDown}
         className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 outline-none"
       >
         {/* Header */}

@@ -1,6 +1,7 @@
 import { AlertTriangle, Clock } from 'lucide-react';
 import { cn, calculateDaysRemaining, formatDate } from '@/lib/utils';
 import type { StateElectionData } from '@/data/electionData';
+import { CalendarButton } from './CalendarButton';
 
 interface DeadlineCardProps {
   stateData: StateElectionData;
@@ -37,16 +38,24 @@ export function DeadlineCard({ stateData, className }: DeadlineCardProps) {
               "text-lg md:text-xl font-bold leading-tight",
               isExpired ? "text-red-800" : "text-orange-900"
             )}>
-              {isExpired 
+              {isExpired
                 ? "The registration deadline for this election has passed."
                 : `Register by ${formatDate(stateData.deadline)} or you cannot vote in this election.`
               }
             </h2>
-            
+
             {!isExpired && (
-              <div className="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-white/50 w-max px-3 py-1.5 rounded-full border border-orange-200">
-                <Clock className="w-4 h-4" />
-                <span>Days left: {daysLeft}</span>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5 text-sm font-medium text-gray-600 bg-white/50 px-3 py-1.5 rounded-full border border-orange-200">
+                  <Clock className="w-4 h-4" />
+                  <span>Days left: {daysLeft}</span>
+                </div>
+
+                <CalendarButton
+                  eventName={`Registration Deadline: ${stateData.name}`}
+                  eventDate={stateData.deadline}
+                  description={`Last day to register for the ${stateData.electionType} in ${stateData.name}. Be a voter!`}
+                />
               </div>
             )}
           </div>

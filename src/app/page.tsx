@@ -1,19 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import dynamic from "next/dynamic";
 import { PinInput } from "@/components/PinInput";
 import { EligibilityCard } from "@/components/EligibilityCard";
 import { DeadlineCard } from "@/components/DeadlineCard";
 import { CtaButton } from "@/components/CtaButton";
-import { PollingPlaceCard } from "@/components/PollingPlaceCard";
 import { StatePickerModal } from "@/components/StatePickerModal";
 import { PostRegGuidance } from "@/components/PostRegGuidance";
-import { ElectionTimeline } from "@/components/ElectionTimeline";
-import { ElectionGlossary } from "@/components/ElectionGlossary";
 import { SkipLink } from "@/components/SkipLink";
 import { pinToStateMap, PollingPlace } from "@/data/pinToState";
 import { electionData, StateElectionData } from "@/data/electionData";
 import { CheckCircle2 } from "lucide-react";
+import { trackEvent } from "@/components/GoogleAnalytics";
+
+// Dynamic imports for efficiency
+const PollingPlaceCard = dynamic(() => import("@/components/PollingPlaceCard").then(mod => mod.PollingPlaceCard));
+const ElectionTimeline = dynamic(() => import("@/components/ElectionTimeline").then(mod => mod.ElectionTimeline));
+const ElectionGlossary = dynamic(() => import("@/components/ElectionGlossary").then(mod => mod.ElectionGlossary));
 
 export default function Home() {
   const [activeState, setActiveState] = useState<StateElectionData | null>(null);
@@ -21,7 +25,7 @@ export default function Home() {
   const [showStatePicker, setShowStatePicker] = useState(false);
   const [showGuidance, setShowGuidance] = useState(false);
 
-  const handlePinChange = (pin: string, isValid: boolean) => {
+  const handlePinChange = useCallback((pin: string, isValid: boolean) => {
     if (!isValid) {
       setActiveState(null);
       setActivePollingPlace(null);
@@ -32,21 +36,24 @@ export default function Home() {
     if (mapping) {
       setActiveState(electionData[mapping.state]);
       setActivePollingPlace(mapping.pollingPlace);
+      trackEvent('pin_lookup', 'engagement', mapping.state);
     } else {
       // Show modal to pick state if PIN is not in our demo db
       setShowStatePicker(true);
+      trackEvent('pin_lookup_fail', 'engagement', 'unmapped_pin');
     }
-  };
+  }, []);
 
-  const handleStateSelect = (stateCode: string) => {
+  const handleStateSelect = useCallback((stateCode: string) => {
     setActiveState(electionData[stateCode]);
     // Clear polling place as we don't have exact zip match
     setActivePollingPlace(null);
-  };
+    trackEvent('state_select', 'engagement', stateCode);
+  }, []);
 
-  const handleRegisterClick = () => {
+  const handleRegisterClick = useCallback(() => {
     setShowGuidance(true);
-  };
+  }, []);
 
   return (
     <>
