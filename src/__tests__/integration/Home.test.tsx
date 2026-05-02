@@ -33,7 +33,7 @@ describe('Home page flow', () => {
 
     await enterPin('110001');
 
-    expect(screen.getByText(/ordinary resident of/i)).toHaveTextContent('Delhi');
+    expect(screen.getByText(/Delhi resident/i)).toHaveTextContent('180+ days');
     expect(screen.getByText(/Register by May 15, 2026/i)).toBeInTheDocument();
   });
 

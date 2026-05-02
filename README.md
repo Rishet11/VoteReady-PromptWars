@@ -64,7 +64,7 @@ Full search engine optimization with dynamic `sitemap.ts` and `robots.ts` for ma
 | :--- | :--- | :--- |
 | **Production Build** | **Passing** | Confirms the app can ship on Cloud Run. |
 | **TypeScript** | **Passing** | Protects the API and component contracts. |
-| **Tests** | **44/44 passing** | Covers unit, integration, API, and accessibility flows. |
+| **Tests** | **51/51 passing** | Covers unit, integration, API, and accessibility flows. |
 | **Lint** | **Clean** | Keeps code quality scoring signals strong. |
 
 ---
@@ -120,4 +120,3 @@ Built with ❤️ by **Rishet Mehra** for the **Google PromptWars** Hackathon.
 | **Analytics 4** | [`src/components/GoogleAnalytics.tsx`](src/components/GoogleAnalytics.tsx) | Verified by `GoogleAnalytics.test.tsx` |
 | **Cloud Run** | `Dockerfile` | Deployment URL available in badges |
 | **Cloud Logging** | [`src/app/api/guidance/route.ts`](src/app/api/guidance/route.ts) | Structured JSON severity logging (INFO/WARNING) |
-
