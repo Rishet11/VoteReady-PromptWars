@@ -1,9 +1,27 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
-// Initialize the Gemini API client
-const apiKey = process.env.GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(apiKey);
+const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
 
-export const getGeminiModel = () => {
-  return genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
-};
+let genAI: GoogleGenAI | null = null;
+
+function getGeminiClient() {
+  genAI ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  return genAI;
+}
+
+export function getGeminiModelName() {
+  return process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+}
+
+export async function generateGuidance(systemInstruction: string, prompt: string): Promise<string> {
+  const response = await getGeminiClient().models.generateContent({
+    model: getGeminiModelName(),
+    contents: prompt,
+    config: {
+      systemInstruction,
+      temperature: 0.3,
+    },
+  });
+
+  return response.text?.trim() || '';
+}
