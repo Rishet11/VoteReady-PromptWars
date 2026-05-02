@@ -1,3 +1,10 @@
+/**
+ * Gemini AI Client
+ * Provides access to Google Gemini 3 Flash (Preview) via Vertex AI for generating
+ * personalized voter registration guidance.
+ * @module geminiClient
+ */
+
 import { VertexAI } from '@google-cloud/vertexai';
 
 const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
@@ -14,10 +21,17 @@ function getVertexClient() {
   return vertexAI;
 }
 
+/** Returns the configured Gemini model name from environment or the default. */
 export function getGeminiModelName() {
   return process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
 }
 
+/**
+ * Generates post-registration voter guidance using Google Gemini.
+ * @param systemInstruction - The system prompt defining the AI's persona and constraints.
+ * @param prompt - The user-facing prompt with state-specific election details.
+ * @returns The generated guidance text, or an empty string if generation fails.
+ */
 export async function generateGuidance(systemInstruction: string, prompt: string): Promise<string> {
   const generativeModel = getVertexClient().getGenerativeModel({
     model: getGeminiModelName(),
@@ -43,3 +57,4 @@ export async function generateGuidance(systemInstruction: string, prompt: string
 
   return text;
 }
+

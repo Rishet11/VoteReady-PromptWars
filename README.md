@@ -43,7 +43,7 @@ graph TD
     C --> J[Google Maps Embed API]
     J --> K[Live Polling Station View]
     L[User Interactions] --> M[Google Analytics 4]
-    F --> N[BigQuery-ready Structured Cloud Logging]
+    F --> N[Structured Cloud Logging - JSON]
 ```
 
 ---
@@ -94,7 +94,6 @@ Full search engine optimization with dynamic `sitemap.ts` and `robots.ts` for ma
 2. **Environment Setup**:
    Create `.env.local`:
    ```env
-   GEMINI_API_KEY="AIzaSy..."
    GEMINI_MODEL="gemini-3-flash-preview"
    GOOGLE_CLOUD_PROJECT_ID="your_google_cloud_project_id"
    FIRESTORE_PROJECT_ID="your_firestore_project_id"

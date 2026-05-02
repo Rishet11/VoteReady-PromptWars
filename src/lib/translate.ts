@@ -1,3 +1,10 @@
+/**
+ * Google Cloud Translation API Client
+ * Translates AI-generated guidance into supported Indian languages
+ * (Hindi, Bengali, Telugu, Tamil) with timeout and graceful fallback.
+ * @module translate
+ */
+
 import { TranslationServiceClient } from '@google-cloud/translate';
 import type { SupportedLanguageCode } from './languages';
 
@@ -25,6 +32,12 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string)
   ]);
 }
 
+/**
+ * Translates text to a supported Indian language using Google Cloud Translation API.
+ * Returns the original text with `translated: false` if translation is unavailable.
+ * @param text - The English source text to translate.
+ * @param targetLanguageCode - The target language code (hi, bn, te, ta).
+ */
 export async function translateText(
   text: string,
   targetLanguageCode: Exclude<SupportedLanguageCode, 'en'>

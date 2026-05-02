@@ -1,3 +1,10 @@
+/**
+ * Supported Languages
+ * Defines the languages available for AI guidance translation via
+ * Google Cloud Translation API: English, Hindi, Bengali, Telugu, Tamil.
+ * @module languages
+ */
+
 export const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English' },
   { code: 'hi', name: 'Hindi (हिन्दी)' },

@@ -7,15 +7,15 @@ import { EligibilityCard } from "@/components/EligibilityCard";
 import { DeadlineCard } from "@/components/DeadlineCard";
 import { CtaButton } from "@/components/CtaButton";
 import { StatePickerModal } from "@/components/StatePickerModal";
-import { PostRegGuidance } from "@/components/PostRegGuidance";
 import { SkipLink } from "@/components/SkipLink";
-import { PollingPlace, type PinStateMap } from "@/data/pinToState";
-import { electionData, StateElectionData } from "@/data/electionData";
+import { type PollingPlace, type PinStateMap } from "@/data/pinToState";
+import { electionData, type StateElectionData } from "@/data/electionData";
 import { CheckCircle2 } from "lucide-react";
 import { trackEvent } from "@/components/GoogleAnalytics";
 
-// Dynamic imports for efficiency
-const PollingPlaceCard = dynamic(() => import("@/components/PollingPlaceCard").then(mod => mod.PollingPlaceCard));
+// Dynamic imports for efficiency — only loaded when user triggers the relevant UI
+const PostRegGuidance = dynamic(() => import("@/components/PostRegGuidance").then(mod => mod.PostRegGuidance), { ssr: false });
+const PollingPlaceCard = dynamic(() => import("@/components/PollingPlaceCard").then(mod => mod.PollingPlaceCard), { ssr: false });
 const ElectionTimeline = dynamic(() => import("@/components/ElectionTimeline").then(mod => mod.ElectionTimeline));
 const ElectionGlossary = dynamic(() => import("@/components/ElectionGlossary").then(mod => mod.ElectionGlossary));
 

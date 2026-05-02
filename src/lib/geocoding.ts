@@ -10,6 +10,13 @@ export interface GeocodedLocation {
   formattedAddress: string;
 }
 
+/** Shape of a single address component from the Google Geocoding API. */
+interface GeocodingAddressComponent {
+  long_name: string;
+  short_name: string;
+  types: string[];
+}
+
 const STATE_NAME_TO_CODE: Record<string, string> = {
   "Andaman and Nicobar Islands": "AN",
   "Andhra Pradesh": "AP",
@@ -71,7 +78,7 @@ export async function resolvePinToState(pin: string): Promise<GeocodedLocation |
     const addressComponents = result.address_components;
     
     // Find state component (administrative_area_level_1)
-    const stateComponent = addressComponents.find((c: any) => 
+    const stateComponent = addressComponents.find((c: GeocodingAddressComponent) => 
       c.types.includes("administrative_area_level_1")
     );
 

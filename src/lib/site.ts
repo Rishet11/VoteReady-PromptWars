@@ -1,3 +1,9 @@
+/**
+ * Site URL Configuration
+ * Provides the canonical production URL used by metadata, sitemap, and robots.
+ * @module site
+ */
+
 export const DEFAULT_SITE_URL = 'https://voteready-462604012263.asia-south1.run.app';
 
 export function getSiteUrl() {

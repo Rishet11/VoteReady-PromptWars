@@ -1,3 +1,11 @@
+/**
+ * Cloud Firestore PIN Lookup Cache
+ * Caches successful PIN-to-state mappings for 24 hours to reduce
+ * repeated Geocoding API calls. Includes timeout protection and
+ * graceful degradation if Firestore is unavailable.
+ * @module firestoreCache
+ */
+
 import { applicationDefault, cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp, type Firestore } from "firebase-admin/firestore";
 
@@ -90,6 +98,11 @@ async function withFirestoreTimeout<T>(operation: Promise<T>): Promise<T> {
   }
 }
 
+/**
+ * Retrieves a cached PIN lookup from Cloud Firestore.
+ * Returns null on miss, expiry, timeout, or Firestore unavailability.
+ * @param pin - The 6-digit Indian PIN code to look up.
+ */
 export async function getCachedPin<T extends object = Record<string, unknown>>(
   pin: string,
 ): Promise<T | null> {
@@ -119,6 +132,12 @@ export async function getCachedPin<T extends object = Record<string, unknown>>(
   }
 }
 
+/**
+ * Writes a PIN lookup result to the Firestore cache with a 24-hour TTL.
+ * Silently fails if Firestore is unavailable.
+ * @param pin - The 6-digit PIN code.
+ * @param data - The state mapping data to cache.
+ */
 export async function setCachedPin(pin: string, data: object): Promise<void> {
   const db = getFirestoreClient();
   if (!db) {
@@ -141,6 +160,7 @@ export async function setCachedPin(pin: string, data: object): Promise<void> {
   }
 }
 
+/** Injects a test Firestore client. Used only in test suites. */
 export function setFirestoreClientForTests(db: Firestore | null | undefined) {
   firestoreForTests = db;
 }

@@ -50,6 +50,9 @@ graphify-out/
 # Artifacts & Logs
 build_error.log
 lighthouse-report.html
+LINT_CLEAN.log
+fresh_lint_results.txt
+scratch/
 
 # Legacy Folders
 voteready/

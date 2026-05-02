@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { pinToStateMap, type PinStateMap, type PollingPlace } from "@/data/pinToState";
+import { pinToStateMap, type PinStateMap } from "@/data/pinToState";
 import { getCachedPin, setCachedPin } from "@/lib/firestoreCache";
 import { isValidPinCode } from "@/lib/sanitize";
 import { resolvePinToState } from "@/lib/geocoding";
@@ -17,11 +17,11 @@ type PinLookupMiss = {
   cached: false;
 };
 
-function jsonResponse(body: PinLookupSuccess | PinLookupMiss | { error: string }, status = 200) {
+function jsonResponse(body: PinLookupSuccess | PinLookupMiss | { error: string }, status = 200, cacheHit = false) {
   return NextResponse.json(body, {
     status,
     headers: {
-      "Cache-Control": "no-store",
+      "Cache-Control": cacheHit ? "public, s-maxage=60" : "no-store",
     },
   });
 }
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       found: true,
       cached: true,
       mapping: cachedMapping,
-    });
+    }, 200, true);
   }
 
   const mapping = pinToStateMap[pin];
