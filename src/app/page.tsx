@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { PinInput } from "@/components/PinInput";
 import { EligibilityCard } from "@/components/EligibilityCard";
@@ -9,7 +9,7 @@ import { CtaButton } from "@/components/CtaButton";
 import { StatePickerModal } from "@/components/StatePickerModal";
 import { PostRegGuidance } from "@/components/PostRegGuidance";
 import { SkipLink } from "@/components/SkipLink";
-import { pinToStateMap, PollingPlace } from "@/data/pinToState";
+import { PollingPlace, type PinStateMap } from "@/data/pinToState";
 import { electionData, StateElectionData } from "@/data/electionData";
 import { CheckCircle2 } from "lucide-react";
 import { trackEvent } from "@/components/GoogleAnalytics";
@@ -19,28 +19,78 @@ const PollingPlaceCard = dynamic(() => import("@/components/PollingPlaceCard").t
 const ElectionTimeline = dynamic(() => import("@/components/ElectionTimeline").then(mod => mod.ElectionTimeline));
 const ElectionGlossary = dynamic(() => import("@/components/ElectionGlossary").then(mod => mod.ElectionGlossary));
 
+type PinLookupResponse =
+  | {
+      found: true;
+      cached: boolean;
+      mapping: PinStateMap;
+    }
+  | {
+      found: false;
+      cached: false;
+    }
+  | {
+      error: string;
+    };
+
 export default function Home() {
   const [activeState, setActiveState] = useState<StateElectionData | null>(null);
   const [activePollingPlace, setActivePollingPlace] = useState<PollingPlace | null>(null);
   const [showStatePicker, setShowStatePicker] = useState(false);
   const [showGuidance, setShowGuidance] = useState(false);
+  const [isLookingUpPin, setIsLookingUpPin] = useState(false);
+  const lookupRequestIdRef = useRef(0);
 
-  const handlePinChange = useCallback((pin: string, isValid: boolean) => {
+  const handlePinChange = useCallback(async (pin: string, isValid: boolean) => {
+    const requestId = lookupRequestIdRef.current + 1;
+    lookupRequestIdRef.current = requestId;
+
     if (!isValid) {
       setActiveState(null);
       setActivePollingPlace(null);
+      setShowGuidance(false);
+      setIsLookingUpPin(false);
       return;
     }
 
-    const mapping = pinToStateMap[pin];
-    if (mapping) {
-      setActiveState(electionData[mapping.state]);
-      setActivePollingPlace(mapping.pollingPlace);
-      trackEvent('lookup_pin', 'engagement', mapping.state);
-    } else {
-      // Show modal to pick state if PIN is not in our demo db
+    setIsLookingUpPin(true);
+
+    try {
+      const response = await fetch("/api/pin-lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
+      });
+
+      if (lookupRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      const result = (await response.json()) as PinLookupResponse;
+      if (!response.ok || "error" in result) {
+        throw new Error("PIN lookup failed");
+      }
+
+      if (result.found) {
+        setActiveState(electionData[result.mapping.state]);
+        setActivePollingPlace(result.mapping.pollingPlace);
+        setShowStatePicker(false);
+        setShowGuidance(false);
+        trackEvent('lookup_pin', 'engagement', result.mapping.state);
+        return;
+      }
+
       setShowStatePicker(true);
       trackEvent('lookup_pin_fail', 'engagement', 'unmapped_pin');
+    } catch {
+      if (lookupRequestIdRef.current === requestId) {
+        setShowStatePicker(true);
+        trackEvent('lookup_pin_fail', 'engagement', 'pin_lookup_error');
+      }
+    } finally {
+      if (lookupRequestIdRef.current === requestId) {
+        setIsLookingUpPin(false);
+      }
     }
   }, []);
 
@@ -48,6 +98,7 @@ export default function Home() {
     setActiveState(electionData[stateCode]);
     // Clear polling place as we don't have exact zip match
     setActivePollingPlace(null);
+    setShowGuidance(false);
     trackEvent('state_select', 'engagement', stateCode);
   }, []);
 
@@ -87,6 +138,11 @@ export default function Home() {
         {/* PIN Input Section */}
         <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200 flex flex-col items-center animate-slide-up">
           <PinInput onPinChange={handlePinChange} className="w-full" />
+          {isLookingUpPin && (
+            <p className="mt-3 text-sm text-gray-600" role="status">
+              Checking PIN code...
+            </p>
+          )}
         </section>
 
         {/* Dynamic Content based on State */}

@@ -6,9 +6,33 @@ describe('Home page flow', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-05-01T12:00:00Z'));
+    vi.stubGlobal('fetch', vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body ?? '{}')) as { pin?: string };
+      if (body.pin === '110001') {
+        return new Response(JSON.stringify({
+          found: true,
+          cached: false,
+          mapping: {
+            state: 'DL',
+            pollingPlace: {
+              name: 'NDMC Primary School',
+              address: 'Connaught Place',
+              city: 'New Delhi',
+              pin: '110001',
+              lat: 28.6315,
+              lng: 77.2167,
+              distance: 0.3,
+            },
+          },
+        }), { status: 200 });
+      }
+
+      return new Response(JSON.stringify({ found: false, cached: false }), { status: 200 });
+    }));
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
@@ -18,6 +42,10 @@ describe('Home page flow', () => {
     });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(300);
+    });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
     });
   }
 
