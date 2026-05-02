@@ -4,9 +4,9 @@ const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com;
     connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data:;
-    font-src 'self' https://fonts.gstatic.com;
+    font-src 'self';
     object-src 'none';
     base-uri 'self';
     form-action 'self';
@@ -55,6 +55,9 @@ const nextConfig: NextConfig = {
   },
   output: "standalone",
   compress: true,
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
   poweredByHeader: false,
 };
 
