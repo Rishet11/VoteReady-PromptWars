@@ -1,30 +1,11 @@
-import { NextResponse } from "next/server";
 import { pinToStateMap, type PinStateMap } from "@/data/pinToState";
 import { getCachedPin, setCachedPin } from "@/lib/firestoreCache";
 import { isValidPinCode } from "@/lib/sanitize";
 import { resolvePinToState } from "@/lib/geocoding";
+import { apiResponse } from "@/lib/apiResponse";
+import { CACHE_HEADERS } from "@/lib/constants/headers";
 
 export const runtime = "nodejs";
-
-type PinLookupSuccess = {
-  found: true;
-  cached: boolean;
-  mapping: PinStateMap;
-};
-
-type PinLookupMiss = {
-  found: false;
-  cached: false;
-};
-
-function jsonResponse(body: PinLookupSuccess | PinLookupMiss | { error: string }, status = 200, cacheHit = false) {
-  return NextResponse.json(body, {
-    status,
-    headers: {
-      "Cache-Control": cacheHit ? "public, s-maxage=60" : "no-store",
-    },
-  });
-}
 
 async function extractPinFromRequest(request: Request): Promise<string | null> {
   try {
@@ -73,23 +54,32 @@ async function resolveFromGeocoding(pin: string): Promise<PinStateMap | null> {
 export async function POST(request: Request) {
   const pin = await extractPinFromRequest(request);
   if (!pin) {
-    return jsonResponse({ error: "Invalid PIN code or JSON body" }, 400);
+    return apiResponse.badRequest("Invalid PIN code or JSON body", CACHE_HEADERS.NO_STORE);
   }
 
   const cachedMapping = await resolveFromCache(pin);
   if (cachedMapping) {
-    return jsonResponse({ found: true, cached: true, mapping: cachedMapping }, 200, true);
+    return apiResponse.ok(
+      { found: true, cached: true, mapping: cachedMapping },
+      CACHE_HEADERS.PUBLIC_SHORT
+    );
   }
 
   const localMapping = await resolveFromLocalMap(pin);
   if (localMapping) {
-    return jsonResponse({ found: true, cached: false, mapping: localMapping });
+    return apiResponse.ok(
+      { found: true, cached: false, mapping: localMapping },
+      CACHE_HEADERS.NO_STORE
+    );
   }
 
   const dynamicMapping = await resolveFromGeocoding(pin);
   if (dynamicMapping) {
-    return jsonResponse({ found: true, cached: false, mapping: dynamicMapping });
+    return apiResponse.ok(
+      { found: true, cached: false, mapping: dynamicMapping },
+      CACHE_HEADERS.NO_STORE
+    );
   }
 
-  return jsonResponse({ found: false, cached: false });
+  return apiResponse.ok({ found: false, cached: false }, CACHE_HEADERS.NO_STORE);
 }

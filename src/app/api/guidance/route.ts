@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server';
 import { generateGuidance } from '@/lib/geminiClient';
 import { getSystemPrompt, getUserPrompt } from '@/lib/geminiPrompts';
 import { electionData } from '@/data/electionData';
@@ -10,6 +9,9 @@ import {
 } from '@/lib/languages';
 import { getCachedGuidance, setCachedGuidance } from '@/lib/guidanceCache';
 import type { GuidanceResponse } from '@/lib/guidanceTypes';
+import { logger } from '@/lib/logger';
+import { apiResponse } from '@/lib/apiResponse';
+import { CACHE_HEADERS } from '@/lib/constants/headers';
 
 export const runtime = 'nodejs';
 
@@ -30,12 +32,6 @@ After you register, here's what happens:
 Questions? Call the Voter Helpline at 1950.
 `.trim();
 
-function guidanceJson(response: GuidanceResponse) {
-  return NextResponse.json(response, {
-    headers: { 'Cache-Control': response.cached ? 'public, s-maxage=3600' : 'no-store' },
-  });
-}
-
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
   return Promise.race([
     promise,
@@ -43,17 +39,6 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string)
       setTimeout(() => reject(new Error(message)), timeoutMs);
     }),
   ]);
-}
-
-function logCloudEvent(data: Record<string, unknown>) {
-  console.info(
-    JSON.stringify({
-      severity: 'INFO',
-      message: `Guidance API event: ${data.event}`,
-      ...data,
-      timestamp: new Date().toISOString(),
-    })
-  );
 }
 
 async function parseGuidanceRequest(request: Request) {
@@ -122,8 +107,8 @@ export async function POST(request: Request) {
   
   try {
     const parsedRequest = await parseGuidanceRequest(request);
-    if ('error' in parsedRequest) {
-      return NextResponse.json({ error: parsedRequest.error }, { status: parsedRequest.status });
+    if ('error' in parsedRequest && parsedRequest.error) {
+      return apiResponse.badRequest(parsedRequest.error as string, CACHE_HEADERS.NO_STORE);
     }
     
     const { sanitizedStateCode, language } = parsedRequest;
@@ -131,8 +116,8 @@ export async function POST(request: Request) {
     const cached = getCachedGuidance(cacheKey);
 
     if (cached) {
-      logCloudEvent({ event: 'cache_hit', stateCode: sanitizedStateCode, language, durationMs: Date.now() - startTime });
-      return guidanceJson({ ...cached, cached: true });
+      logger.info({ event: 'cache_hit', message: 'Guidance API event: cache_hit', stateCode: sanitizedStateCode, language, durationMs: Date.now() - startTime });
+      return apiResponse.ok({ ...cached, cached: true }, CACHE_HEADERS.PUBLIC_LONG);
     }
 
     const response = await processGuidance(sanitizedStateCode, language);
@@ -141,8 +126,9 @@ export async function POST(request: Request) {
       setCachedGuidance(cacheKey, response, CACHE_TTL_MS);
     }
 
-    logCloudEvent({
+    logger.info({
       event: 'api_success',
+      message: 'Guidance API event: api_success',
       stateCode: sanitizedStateCode,
       language,
       translated: response.translated,
@@ -150,21 +136,22 @@ export async function POST(request: Request) {
       durationMs: Date.now() - startTime,
     });
 
-    return guidanceJson(response);
+    return apiResponse.ok(response, CACHE_HEADERS.NO_STORE);
   } catch (error: unknown) {
-    logCloudEvent({
+    logger.error({
       event: 'api_fallback',
+      message: 'Guidance API event: api_fallback',
       error: error instanceof Error ? error.message : 'Unknown error',
       durationMs: Date.now() - startTime,
     });
 
-    return guidanceJson({
+    return apiResponse.ok({
       guidance: STANDARD_FALLBACK_GUIDANCE,
       fallback: true,
       cached: false,
       language: 'en',
       translated: true,
       source: 'standard',
-    });
+    }, CACHE_HEADERS.NO_STORE);
   }
 }
