@@ -26,66 +26,70 @@ function jsonResponse(body: PinLookupSuccess | PinLookupMiss | { error: string }
   });
 }
 
-export async function POST(request: Request) {
-  let body: unknown;
-
+async function extractPinFromRequest(request: Request): Promise<string | null> {
   try {
-    body = await request.json();
+    const body = await request.json();
+    const pin = typeof body === "object" && body !== null && "pin" in body ? String(body.pin) : "";
+    return isValidPinCode(pin) ? pin : null;
   } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
+    return null;
   }
+}
 
-  const pin = typeof body === "object" && body !== null && "pin" in body ? String(body.pin) : "";
-  if (!isValidPinCode(pin)) {
-    return jsonResponse({ error: "Invalid PIN code" }, 400);
-  }
+async function resolveFromCache(pin: string): Promise<PinStateMap | null> {
+  return getCachedPin<PinStateMap>(pin);
+}
 
-  const cachedMapping = await getCachedPin<PinStateMap>(pin);
-  if (cachedMapping) {
-    return jsonResponse({
-      found: true,
-      cached: true,
-      mapping: cachedMapping,
-    }, 200, true);
-  }
-
+async function resolveFromLocalMap(pin: string): Promise<PinStateMap | null> {
   const mapping = pinToStateMap[pin];
   if (mapping) {
     await setCachedPin(pin, mapping);
-    return jsonResponse({
-      found: true,
-      cached: false,
-      mapping,
-    });
+    return mapping;
   }
+  return null;
+}
 
-  // Fallback: Universal Geocoding for ANY PIN in India
+async function resolveFromGeocoding(pin: string): Promise<PinStateMap | null> {
   const dynamicLocation = await resolvePinToState(pin);
-  if (dynamicLocation) {
-    const dynamicMapping: PinStateMap = {
-      state: dynamicLocation.state,
-      pollingPlace: {
-        name: "General Polling Station Area",
-        address: dynamicLocation.formattedAddress,
-        city: "Located by PIN Code",
-        pin: pin,
-        lat: dynamicLocation.lat,
-        lng: dynamicLocation.lng,
-        distance: 0, // Reference point
-      },
-    };
+  if (!dynamicLocation) return null;
 
-    await setCachedPin(pin, dynamicMapping);
-    
-    return jsonResponse({
-      found: true,
-      cached: false,
-      mapping: dynamicMapping,
-    });
+  const dynamicMapping: PinStateMap = {
+    state: dynamicLocation.state,
+    pollingPlace: {
+      name: "General Polling Station Area",
+      address: dynamicLocation.formattedAddress,
+      city: "Located by PIN Code",
+      pin: pin,
+      lat: dynamicLocation.lat,
+      lng: dynamicLocation.lng,
+      distance: 0,
+    },
+  };
+
+  await setCachedPin(pin, dynamicMapping);
+  return dynamicMapping;
+}
+
+export async function POST(request: Request) {
+  const pin = await extractPinFromRequest(request);
+  if (!pin) {
+    return jsonResponse({ error: "Invalid PIN code or JSON body" }, 400);
   }
 
-  return jsonResponse({
-    found: false,
-    cached: false,
-  });
+  const cachedMapping = await resolveFromCache(pin);
+  if (cachedMapping) {
+    return jsonResponse({ found: true, cached: true, mapping: cachedMapping }, 200, true);
+  }
+
+  const localMapping = await resolveFromLocalMap(pin);
+  if (localMapping) {
+    return jsonResponse({ found: true, cached: false, mapping: localMapping });
+  }
+
+  const dynamicMapping = await resolveFromGeocoding(pin);
+  if (dynamicMapping) {
+    return jsonResponse({ found: true, cached: false, mapping: dynamicMapping });
+  }
+
+  return jsonResponse({ found: false, cached: false });
 }

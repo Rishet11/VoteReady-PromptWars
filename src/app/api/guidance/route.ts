@@ -30,74 +30,112 @@ After you register, here's what happens:
 Questions? Call the Voter Helpline at 1950.
 `.trim();
 
+function guidanceJson(response: GuidanceResponse) {
+  return NextResponse.json(response, {
+    headers: { 'Cache-Control': response.cached ? 'public, s-maxage=3600' : 'no-store' },
+  });
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error(message)), timeoutMs);
+    }),
+  ]);
+}
+
+function logCloudEvent(data: Record<string, unknown>) {
+  console.info(
+    JSON.stringify({
+      severity: 'INFO',
+      message: `Guidance API event: ${data.event}`,
+      ...data,
+      timestamp: new Date().toISOString(),
+    })
+  );
+}
+
+async function parseGuidanceRequest(request: Request) {
+  const body = (await request.json()) as Record<string, unknown>;
+  const sanitizedStateCode = sanitizeInput(
+    typeof body.stateCode === 'string' ? body.stateCode : ''
+  );
+  const language = typeof body.language === 'string' ? body.language : 'en';
+
+  if (!isSupportedLanguageCode(language)) {
+    return { error: 'Unsupported language', status: 400 };
+  }
+
+  if (!sanitizedStateCode || !electionData[sanitizedStateCode]) {
+    return { error: 'Invalid or missing state code', status: 400 };
+  }
+
+  return { sanitizedStateCode, language: language as SupportedLanguageCode };
+}
+
+async function fetchFromGemini(stateCode: string): Promise<string | null> {
+  const stateInfo = electionData[stateCode];
+  if (!stateInfo) return null;
+  
+  return withTimeout(
+    generateGuidance(
+      getSystemPrompt(),
+      getUserPrompt(
+        stateInfo.name,
+        stateInfo.deadline,
+        stateInfo.electionDate,
+        stateInfo.verificationUrl
+      )
+    ),
+    GEMINI_TIMEOUT_MS,
+    'Gemini API timeout'
+  );
+}
+
+async function processGuidance(stateCode: string, language: SupportedLanguageCode): Promise<GuidanceResponse> {
+  const generatedGuidance = await fetchFromGemini(stateCode);
+  
+  let response: GuidanceResponse = {
+    guidance: generatedGuidance || STANDARD_FALLBACK_GUIDANCE,
+    fallback: !generatedGuidance,
+    cached: false,
+    language,
+    translated: language === 'en',
+    source: generatedGuidance ? 'gemini' : 'standard',
+  };
+
+  if (language !== 'en' && generatedGuidance) {
+    const translation = await translateText(generatedGuidance, language);
+    response = {
+      ...response,
+      guidance: translation.text,
+      translated: translation.translated,
+    };
+  }
+
+  return response;
+}
+
 export async function POST(request: Request) {
   const startTime = Date.now();
-  let requestedLanguage: SupportedLanguageCode = 'en';
-
+  
   try {
-    const body = (await request.json()) as Record<string, unknown>;
-    const sanitizedStateCode = sanitizeInput(
-      typeof body.stateCode === 'string' ? body.stateCode : ''
-    );
-    const language = body.language ?? 'en';
-
-    if (!isSupportedLanguageCode(language)) {
-      return NextResponse.json({ error: 'Unsupported language' }, { status: 400 });
+    const parsedRequest = await parseGuidanceRequest(request);
+    if ('error' in parsedRequest) {
+      return NextResponse.json({ error: parsedRequest.error }, { status: parsedRequest.status });
     }
-    requestedLanguage = language;
-
-    if (!sanitizedStateCode || !electionData[sanitizedStateCode]) {
-      return NextResponse.json(
-        { error: 'Invalid or missing state code' },
-        { status: 400 }
-      );
-    }
-
+    
+    const { sanitizedStateCode, language } = parsedRequest;
     const cacheKey = `${sanitizedStateCode}:${language}`;
     const cached = getCachedGuidance(cacheKey);
-    if (cached) {
-      logCloudEvent({
-        event: 'cache_hit',
-        stateCode: sanitizedStateCode,
-        language,
-        durationMs: Date.now() - startTime,
-      });
 
+    if (cached) {
+      logCloudEvent({ event: 'cache_hit', stateCode: sanitizedStateCode, language, durationMs: Date.now() - startTime });
       return guidanceJson({ ...cached, cached: true });
     }
 
-    const stateInfo = electionData[sanitizedStateCode];
-    const generatedGuidance = await withTimeout(
-      generateGuidance(
-        getSystemPrompt(),
-        getUserPrompt(
-          stateInfo.name,
-          stateInfo.deadline,
-          stateInfo.electionDate,
-          stateInfo.verificationUrl
-        )
-      ),
-      GEMINI_TIMEOUT_MS,
-      'Gemini API timeout'
-    );
-
-    let response: GuidanceResponse = {
-      guidance: generatedGuidance || STANDARD_FALLBACK_GUIDANCE,
-      fallback: !generatedGuidance,
-      cached: false,
-      language,
-      translated: language === 'en',
-      source: generatedGuidance ? 'gemini' : 'standard',
-    };
-
-    if (language !== 'en' && generatedGuidance) {
-      const translation = await translateText(generatedGuidance, language);
-      response = {
-        ...response,
-        guidance: translation.text,
-        translated: translation.translated,
-      };
-    }
+    const response = await processGuidance(sanitizedStateCode, language);
 
     if (!response.fallback && response.translated) {
       setCachedGuidance(cacheKey, response, CACHE_TTL_MS);
@@ -124,35 +162,9 @@ export async function POST(request: Request) {
       guidance: STANDARD_FALLBACK_GUIDANCE,
       fallback: true,
       cached: false,
-      language: requestedLanguage,
-      translated: requestedLanguage === 'en',
+      language: 'en',
+      translated: true,
       source: 'standard',
     });
   }
-}
-
-function guidanceJson(response: GuidanceResponse) {
-  return NextResponse.json(response, {
-    headers: { 'Cache-Control': response.cached ? 'public, s-maxage=3600' : 'no-store' },
-  });
-}
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      setTimeout(() => reject(new Error(message)), timeoutMs);
-    }),
-  ]);
-}
-
-function logCloudEvent(data: Record<string, unknown>) {
-  console.info(
-    JSON.stringify({
-      severity: 'INFO',
-      message: `Guidance API event: ${data.event}`,
-      ...data,
-      timestamp: new Date().toISOString(),
-    })
-  );
 }
