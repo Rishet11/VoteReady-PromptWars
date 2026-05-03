@@ -43,6 +43,9 @@ describe('Google Maps Integration', () => {
       // We can't easily trigger onError in JSDOM, but we can test the prop exists
       render(<GoogleMapsEmbed {...mockLocation} />);
       const iframe = screen.getByTitle(/Map showing location of India Gate/i);
+      
+      // Since firing the error event on iframe doesn't trigger React's synthetic onError in JSDOM,
+      // we just verify the prop exists.
       expect(iframe).toHaveProperty('onerror');
     });
   });

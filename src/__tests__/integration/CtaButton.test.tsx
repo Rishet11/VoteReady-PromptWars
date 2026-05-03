@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { CtaButton } from '@/components/CtaButton';
 
 describe('CtaButton', () => {
@@ -19,5 +19,29 @@ describe('CtaButton', () => {
     fireEvent.click(button);
     
     expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles click when onClick is not provided', () => {
+    render(<CtaButton url="https://voters.eci.gov.in" />);
+    const button = screen.getByRole('link');
+    fireEvent.click(button);
+    // Should not throw, and should trigger trackEvent
+  });
+
+  it('shows loading state and resets after timeout', () => {
+    vi.useFakeTimers();
+    render(<CtaButton url="https://voters.eci.gov.in" />);
+    
+    const button = screen.getByRole('link');
+    fireEvent.click(button);
+    
+    expect(button.textContent).not.toContain('Register Now');
+    
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    
+    expect(button.textContent).toContain('Register Now');
+    vi.useRealTimers();
   });
 });

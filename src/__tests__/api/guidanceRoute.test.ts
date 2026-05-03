@@ -140,4 +140,46 @@ describe('POST /api/guidance', () => {
       cached: true,
     });
   });
+
+  it('handles invalid JSON body', async () => {
+    const request = new Request('http://localhost/api/guidance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'invalid-json',
+    });
+    
+    const response = await POST(request);
+    const json = await responseJson(response);
+    
+    expect(response.status).toBe(400);
+    expect(json.error).toBe('Invalid JSON body');
+  });
+
+  it('handles non-Error thrown during Gemini fetch', async () => {
+    mockGenerateGuidance.mockImplementation(() => {
+      throw 'String Error';
+    });
+
+    const response = await POST(guidanceRequest({ stateCode: 'DL' }));
+    const json = await responseJson(response);
+    
+    // It should fallback
+    expect(response.status).toBe(200);
+    expect(json.fallback).toBe(true);
+  });
+
+  it('handles unexpected errors in POST catch block', async () => {
+    // We can force a throw inside POST by mocking translateText to throw synchronously,
+    // or by mocking translateText to return a rejected promise that isn't caught.
+    // Wait, processGuidance doesn't catch translateText errors!
+    mockGenerateGuidance.mockResolvedValue('English');
+    mockTranslateText.mockRejectedValue(new Error('Unexpected translation crash'));
+
+    const response = await POST(guidanceRequest({ stateCode: 'DL', language: 'hi' }));
+    const json = await responseJson(response);
+
+    expect(response.status).toBe(200);
+    expect(json.fallback).toBe(true);
+    expect(json.source).toBe('standard');
+  });
 });
