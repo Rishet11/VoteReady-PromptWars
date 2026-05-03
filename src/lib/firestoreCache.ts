@@ -14,6 +14,7 @@ import {
   PIN_CACHE_TTL_MS as PIN_CACHE_TTL_MS_CONST,
   FIRESTORE_CACHE_TIMEOUT_MS,
 } from "./constants/cache";
+import { logger } from "./logger";
 
 /** Time-to-live for cached PIN entries. Re-exported for backward compatibility. */
 export const PIN_CACHE_TTL_MS = PIN_CACHE_TTL_MS_CONST;
@@ -60,7 +61,8 @@ function getFirestoreClient() {
 
     return getFirestore();
   } catch (error) {
-    console.warn("Firestore PIN cache unavailable", {
+    logger.warn({
+      message: 'Firestore PIN cache unavailable',
       service: "firestore",
       reason: error instanceof Error ? error.message : "unknown",
     });
@@ -168,7 +170,8 @@ export async function setCachedPin(pin: string, data: object): Promise<void> {
       }),
     );
   } catch (error) {
-    console.warn("Firestore PIN cache write failed", {
+    logger.warn({
+      message: 'Firestore PIN cache write failed',
       service: "firestore",
       reason: error instanceof Error ? error.message : "unknown",
     });

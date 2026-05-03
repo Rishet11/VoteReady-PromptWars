@@ -14,3 +14,4 @@ export * from './sanitize';
 export * from './site';
 export * from './translate';
 export * from './utils';
+export * from './withTimeout';

@@ -9,6 +9,7 @@ import { TranslationServiceClient } from '@google-cloud/translate';
 import type { SupportedLanguageCode } from './languages';
 import { Result, ok, err } from './result';
 import { TRANSLATION_TIMEOUT_MS } from './constants/timeouts';
+import { withTimeout } from './withTimeout';
 
 let translationClient: TranslationServiceClient | null = null;
 
@@ -22,14 +23,7 @@ function getTranslationClient() {
   return translationClient;
 }
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      setTimeout(() => reject(new Error(message)), timeoutMs);
-    }),
-  ]);
-}
+
 
 interface GoogleTranslation {
   translatedText?: string | null;

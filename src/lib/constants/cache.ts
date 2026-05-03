@@ -16,3 +16,6 @@ export const PIN_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 /** Maximum time (ms) to wait for a single Firestore cache read or write. */
 export const FIRESTORE_CACHE_TIMEOUT_MS = 800;
+
+/** TTL for the in-memory guidance response cache (1 hour). */
+export const GUIDANCE_CACHE_TTL_MS = 60 * 60 * 1000;

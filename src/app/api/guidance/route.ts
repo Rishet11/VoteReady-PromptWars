@@ -13,15 +13,19 @@ import {
   apiResponse,
   Result,
   ok,
-  err
+  err,
+  withTimeout
 } from '@/lib';
 import { electionData } from '@/data/electionData';
 import { CACHE_HEADERS } from '@/lib/constants/headers';
 import { GEMINI_TIMEOUT_MS } from '@/lib/constants/timeouts';
+import { GUIDANCE_CACHE_TTL_MS } from '@/lib/constants/cache';
+import {
+  GUIDANCE_RATE_LIMIT_WINDOW_MS,
+} from '@/lib/constants/rateLimit';
+import { isRateLimited } from '@/lib/rateLimit';
 
 export const runtime = 'nodejs';
-
-const CACHE_TTL_MS = 60 * 60 * 1000;
 
 const STANDARD_FALLBACK_GUIDANCE = `
 You're heading to the registration portal.
@@ -37,14 +41,7 @@ After you register, here's what happens:
 Questions? Call the Voter Helpline at 1950.
 `.trim();
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      setTimeout(() => reject(new Error(message)), timeoutMs);
-    }),
-  ]);
-}
+
 
 async function extractRequestBody(request: Request): Promise<Record<string, unknown> | null> {
   try {
@@ -92,21 +89,20 @@ async function fetchFromGemini(stateCode: string): Promise<Result<string>> {
   if (!stateInfo) return err(`fetchFromGemini: election data not found for state code: ${stateCode}`);
 
   try {
-    const guidance = await withTimeout(
+    return await withTimeout(
       generateGuidance(
         getSystemPrompt(),
         getUserPrompt(
           stateInfo.name,
           stateInfo.deadline,
           stateInfo.electionDate,
-          stateInfo.verificationUrl
-        )
-      ),
-      GEMINI_TIMEOUT_MS,
-      'Gemini API timeout'
-    );
-    return ok(guidance);
-  } catch (error) {
+        stateInfo.verificationUrl
+      )
+    ),
+    GEMINI_TIMEOUT_MS,
+    'Gemini API timeout'
+  );
+} catch (error) {
     return err('fetchFromGemini: Gemini API call failed for state: ' + stateCode, error instanceof Error ? error : new Error(String(error)));
   }
 }
@@ -155,10 +151,21 @@ function getErrorMessage(error: unknown): string {
 function cacheResponseIfNeeded(response: GuidanceResponse, cacheKey: string) {
   if (response.fallback) return;
   if (!response.translated) return;
-  setCachedGuidance(cacheKey, response, CACHE_TTL_MS);
+  setCachedGuidance(cacheKey, response, GUIDANCE_CACHE_TTL_MS);
 }
 
 export async function POST(request: Request) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  if (isRateLimited(ip)) {
+    return new Response(JSON.stringify({ error: 'Too many requests' }), {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(Math.ceil(GUIDANCE_RATE_LIMIT_WINDOW_MS / 1000)),
+      },
+    });
+  }
+
   const startTime = Date.now();
 
   try {

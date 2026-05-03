@@ -7,6 +7,8 @@
 
 import { VertexAI } from '@google-cloud/vertexai';
 import { VERTEX_AI_REGION } from './constants/geo';
+import { logger } from './logger';
+import { Result, ok, err } from './result';
 
 const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
 
@@ -52,11 +54,11 @@ function extractTextFromResult(result: GeminiResponse): string {
  * 
  * @param systemInstruction - The system prompt defining the AI's persona and constraints.
  * @param prompt - The user-facing prompt with state-specific election details.
- * @returns The generated guidance text, or an empty string if generation fails.
- * @throws {Error} If GOOGLE_CLOUD_PROJECT_ID is missing or API call fails.
+ * @returns Result with generated guidance text, or err on failure.
  */
-export async function generateGuidance(systemInstruction: string, prompt: string): Promise<string> {
-  const generativeModel = getVertexClient().getGenerativeModel({
+export async function generateGuidance(systemInstruction: string, prompt: string): Promise<Result<string>> {
+  try {
+    const generativeModel = getVertexClient().getGenerativeModel({
     model: getGeminiModelName(),
     systemInstruction,
     generationConfig: {
@@ -68,15 +70,20 @@ export async function generateGuidance(systemInstruction: string, prompt: string
   const text = extractTextFromResult(await response.response);
   
   if (text) {
-    console.info(JSON.stringify({
-      severity: 'INFO',
+    logger.info({
       message: 'Gemini service heartbeat: Guidance generated',
-      service: 'gemini-3-flash',
+      service: getGeminiModelName(),
       status: 'success',
-      timestamp: new Date().toISOString(),
-    }));
+    });
+    return ok(text);
   }
 
-  return text;
+  return err('Gemini returned empty response');
+} catch (error) {
+  return err(
+    'Gemini request failed',
+    error instanceof Error ? error : new Error(String(error))
+  );
+}
 }
 

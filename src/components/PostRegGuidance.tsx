@@ -5,19 +5,11 @@ import { StateElectionData } from '@/data/electionData';
 import { LanguageSelector } from './LanguageSelector';
 import { trackEvent } from './GoogleAnalytics';
 import type { SupportedLanguageCode } from '@/lib/languages';
+import type { GuidanceResponse } from '@/lib/guidanceTypes';
 
 interface PostRegGuidanceProps {
   stateData: StateElectionData;
   className?: string;
-}
-
-interface GuidanceApiResponse {
-  guidance: string;
-  fallback: boolean;
-  cached: boolean;
-  language: SupportedLanguageCode;
-  translated: boolean;
-  source: 'gemini' | 'standard';
 }
 
 export function PostRegGuidance({ stateData, className }: PostRegGuidanceProps) {
@@ -49,7 +41,7 @@ export function PostRegGuidance({ stateData, className }: PostRegGuidanceProps) 
         throw new Error('Failed to fetch guidance');
       }
 
-      const data = (await response.json()) as GuidanceApiResponse;
+      const data = (await response.json()) as GuidanceResponse;
       setGuidance(data.guidance);
       setIsFallback(data.fallback);
       setIsTranslated(data.translated);
@@ -79,7 +71,13 @@ export function PostRegGuidance({ stateData, className }: PostRegGuidanceProps) 
   const showEnglishFallbackNotice = language !== 'en' && !isTranslated;
 
   return (
-    <div className={cn("bg-indigo-50 border border-indigo-100 rounded-xl p-5 md:p-6", className)}>
+    <div 
+      className={cn("bg-indigo-50 border border-indigo-100 rounded-xl p-5 md:p-6", className)}
+      aria-live="polite"
+      aria-atomic="true"
+      role="region"
+      aria-label="AI voting guidance"
+    >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-2 text-indigo-900">
           <Bot className="w-6 h-6" />
@@ -93,7 +91,7 @@ export function PostRegGuidance({ stateData, className }: PostRegGuidanceProps) 
       </div>
 
       {loading ? (
-        <div className="space-y-3 animate-pulse" aria-label="Loading guidance...">
+        <div className="space-y-3 animate-pulse" aria-label="Loading guidance..." aria-busy="true">
           <div className="h-4 bg-indigo-200/50 rounded w-3/4"></div>
           <div className="h-4 bg-indigo-200/50 rounded w-1/2"></div>
           <div className="h-4 bg-indigo-200/50 rounded w-5/6"></div>

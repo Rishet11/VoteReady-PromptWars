@@ -36,7 +36,11 @@ describe('geminiClient', () => {
     vi.resetModules();
     delete process.env.GOOGLE_CLOUD_PROJECT_ID;
     const { generateGuidance } = await import('@/lib/geminiClient');
-    await expect(generateGuidance('sys', 'prompt')).rejects.toThrow('GOOGLE_CLOUD_PROJECT_ID is not set');
+    const result = await generateGuidance('sys', 'prompt');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect((result.error as Error).message).toContain('GOOGLE_CLOUD_PROJECT_ID is not set');
+    }
   });
 
   it('returns default model name if not in env', async () => {
@@ -56,8 +60,11 @@ describe('geminiClient', () => {
   it('generates guidance and logs success', async () => {
     vi.resetModules();
     const { generateGuidance } = await import('@/lib/geminiClient');
-    const guidance = await generateGuidance('sys', 'prompt');
-    expect(guidance).toBe('mock guidance');
+    const result = await generateGuidance('sys', 'prompt');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe('mock guidance');
+    }
     expect(console.info).toHaveBeenCalled();
   });
 
@@ -75,8 +82,8 @@ describe('geminiClient', () => {
     });
 
     const { generateGuidance } = await import('@/lib/geminiClient');
-    const guidance = await generateGuidance('sys', 'prompt');
-    expect(guidance).toBe('');
+    const result = await generateGuidance('sys', 'prompt');
+    expect(result.ok).toBe(false);
     expect(console.info).not.toHaveBeenCalled();
   });
   
@@ -96,7 +103,7 @@ describe('geminiClient', () => {
     });
 
     const { generateGuidance } = await import('@/lib/geminiClient');
-    const guidance = await generateGuidance('sys', 'prompt');
-    expect(guidance).toBe('');
+    const result = await generateGuidance('sys', 'prompt');
+    expect(result.ok).toBe(false);
   });
 });

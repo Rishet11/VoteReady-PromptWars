@@ -3,6 +3,7 @@ import { POST } from '@/app/api/guidance/route';
 import { generateGuidance } from '@/lib/geminiClient';
 import { translateText } from '@/lib/translate';
 import { clearGuidanceCacheForTests } from '@/lib/guidanceCache';
+import { clearRateLimitMapForTests } from '@/lib/rateLimit';
 
 vi.mock('@/lib/geminiClient', () => ({
   generateGuidance: vi.fn(),
@@ -32,6 +33,7 @@ describe('POST /api/guidance', () => {
 
   beforeEach(() => {
     clearGuidanceCacheForTests();
+    clearRateLimitMapForTests();
     mockGenerateGuidance.mockReset();
     mockTranslateText.mockReset();
     consoleInfo = vi.spyOn(console, 'info').mockImplementation(() => {});
@@ -43,7 +45,7 @@ describe('POST /api/guidance', () => {
   });
 
   it('returns Gemini guidance for a valid state', async () => {
-    mockGenerateGuidance.mockResolvedValue('Gemini guidance');
+    mockGenerateGuidance.mockResolvedValue({ ok: true, value: 'Gemini guidance' });
 
     const response = await POST(guidanceRequest({ stateCode: 'DL' }));
     const json = await responseJson(response);
@@ -60,7 +62,7 @@ describe('POST /api/guidance', () => {
   });
 
   it('translates Gemini guidance when a supported non-English language is requested', async () => {
-    mockGenerateGuidance.mockResolvedValue('English guidance');
+    mockGenerateGuidance.mockResolvedValue({ ok: true, value: 'English guidance' });
     mockTranslateText.mockResolvedValue({ ok: true, value: { text: 'Hindi guidance', translated: true } });
 
     const response = await POST(guidanceRequest({ stateCode: 'DL', language: 'hi' }));
@@ -77,7 +79,7 @@ describe('POST /api/guidance', () => {
   });
 
   it('returns English when translation is unavailable', async () => {
-    mockGenerateGuidance.mockResolvedValue('English guidance');
+    mockGenerateGuidance.mockResolvedValue({ ok: true, value: 'English guidance' });
     mockTranslateText.mockResolvedValue({ ok: false, message: 'Translation failed', error: new Error('Translation failed') });
 
     const response = await POST(guidanceRequest({ stateCode: 'DL', language: 'hi' }));
@@ -128,7 +130,7 @@ describe('POST /api/guidance', () => {
   });
 
   it('uses cache for repeated successful guidance requests', async () => {
-    mockGenerateGuidance.mockResolvedValue('Cached guidance');
+    mockGenerateGuidance.mockResolvedValue({ ok: true, value: 'Cached guidance' });
 
     await POST(guidanceRequest({ stateCode: 'DL' }));
     const response = await POST(guidanceRequest({ stateCode: 'DL' }));
@@ -172,7 +174,7 @@ describe('POST /api/guidance', () => {
     // We can force a throw inside POST by mocking translateText to throw synchronously,
     // or by mocking translateText to return a rejected promise that isn't caught.
     // Wait, processGuidance doesn't catch translateText errors!
-    mockGenerateGuidance.mockResolvedValue('English');
+    mockGenerateGuidance.mockResolvedValue({ ok: true, value: 'English' });
     mockTranslateText.mockRejectedValue(new Error('Unexpected translation crash'));
 
     const response = await POST(guidanceRequest({ stateCode: 'DL', language: 'hi' }));
