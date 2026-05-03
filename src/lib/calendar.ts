@@ -11,7 +11,10 @@ function formatAllDayDate(date: Date) {
  * @returns A start/end date string in the format YYYYMMDD/YYYYMMDD.
  */
 export function getAllDayDateRange(dateString: string) {
-  const [year, month, day] = dateString.split('-').map(Number);
+  const parts = dateString.split('-').map(Number);
+  const year = parts[0] || 0;
+  const month = parts[1] || 1;
+  const day = parts[2] || 1;
   const startDate = new Date(Date.UTC(year, month - 1, day));
   const endDate = new Date(startDate);
   endDate.setUTCDate(startDate.getUTCDate() + 1);

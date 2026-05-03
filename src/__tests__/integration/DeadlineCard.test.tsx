@@ -4,7 +4,7 @@ import { DeadlineCard } from '@/components/DeadlineCard';
 import { electionData } from '@/data/electionData';
 
 describe('DeadlineCard', () => {
-  const mockState = electionData['DL']; // Delhi (Deadline: 2026-05-15)
+  const mockState = electionData['DL']!; // Delhi (Deadline: 2026-05-15)
 
   beforeEach(() => {
     vi.useFakeTimers();

@@ -72,7 +72,7 @@ export default function Home() {
       }
 
       if (result.found) {
-        setActiveState(electionData[result.mapping.state]);
+        setActiveState(electionData[result.mapping.state] || null);
         setActivePollingPlace(result.mapping.pollingPlace);
         setShowStatePicker(false);
         setShowGuidance(false);
@@ -95,7 +95,7 @@ export default function Home() {
   }, []);
 
   const handleStateSelect = useCallback((stateCode: string) => {
-    setActiveState(electionData[stateCode]);
+    setActiveState(electionData[stateCode] || null);
     // Clear polling place as we don't have exact zip match
     setActivePollingPlace(null);
     setShowGuidance(false);

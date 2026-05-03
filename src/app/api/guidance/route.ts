@@ -41,7 +41,11 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string)
   ]);
 }
 
-async function parseGuidanceRequest(request: Request) {
+type ParseResult =
+  | { ok: true; sanitizedStateCode: string; language: SupportedLanguageCode }
+  | { ok: false; error: string; status: number };
+
+async function parseGuidanceRequest(request: Request): Promise<ParseResult> {
   const body = (await request.json()) as Record<string, unknown>;
   const sanitizedStateCode = sanitizeInput(
     typeof body.stateCode === 'string' ? body.stateCode : ''
@@ -49,14 +53,14 @@ async function parseGuidanceRequest(request: Request) {
   const language = typeof body.language === 'string' ? body.language : 'en';
 
   if (!isSupportedLanguageCode(language)) {
-    return { error: 'Unsupported language', status: 400 };
+    return { ok: false, error: 'Unsupported language', status: 400 };
   }
 
   if (!sanitizedStateCode || !electionData[sanitizedStateCode]) {
-    return { error: 'Invalid or missing state code', status: 400 };
+    return { ok: false, error: 'Invalid or missing state code', status: 400 };
   }
 
-  return { sanitizedStateCode, language: language as SupportedLanguageCode };
+  return { ok: true, sanitizedStateCode, language: language as SupportedLanguageCode };
 }
 
 async function fetchFromGemini(stateCode: string): Promise<string | null> {
@@ -107,8 +111,8 @@ export async function POST(request: Request) {
   
   try {
     const parsedRequest = await parseGuidanceRequest(request);
-    if ('error' in parsedRequest && parsedRequest.error) {
-      return apiResponse.badRequest(parsedRequest.error as string, CACHE_HEADERS.NO_STORE);
+    if (!parsedRequest.ok) {
+      return apiResponse.badRequest(parsedRequest.error, CACHE_HEADERS.NO_STORE);
     }
     
     const { sanitizedStateCode, language } = parsedRequest;

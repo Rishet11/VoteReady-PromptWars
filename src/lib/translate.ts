@@ -63,7 +63,7 @@ export async function translateText(
     );
 
     if (response.translations && response.translations.length > 0) {
-      const translatedText = response.translations[0].translatedText;
+      const translatedText = response.translations[0]?.translatedText;
       if (translatedText) {
         console.info(JSON.stringify({
           severity: 'INFO',

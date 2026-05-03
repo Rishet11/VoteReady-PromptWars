@@ -4,7 +4,7 @@ import { EligibilityCard } from '@/components/EligibilityCard';
 import { electionData } from '@/data/electionData';
 
 describe('EligibilityCard', () => {
-  const mockState = electionData['DL']; // Delhi
+  const mockState = electionData['DL']!; // Delhi
 
   it('renders correctly with state data', () => {
     render(<EligibilityCard stateData={mockState} />);

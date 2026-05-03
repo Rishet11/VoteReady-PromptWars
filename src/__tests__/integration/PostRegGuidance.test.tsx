@@ -8,7 +8,7 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 describe('PostRegGuidance', () => {
-  const mockState = electionData['DL'];
+  const mockState = electionData['DL']!;
 
   beforeEach(() => {
     mockFetch.mockReset();
