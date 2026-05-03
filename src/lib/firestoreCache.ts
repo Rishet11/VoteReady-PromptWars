@@ -25,6 +25,17 @@ function getProjectId() {
   return process.env.FIRESTORE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT_ID;
 }
 
+function getFirebaseCredential(projectId: string) {
+  if (process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+    return cert({
+      projectId,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    });
+  }
+  return applicationDefault();
+}
+
 function getFirestoreClient() {
   if (firestoreForTests !== undefined) {
     return firestoreForTests;
@@ -37,18 +48,9 @@ function getFirestoreClient() {
 
   try {
     if (!getApps().length) {
-      const serviceAccount =
-        process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY
-          ? cert({
-              projectId,
-              clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-              privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-            })
-          : applicationDefault();
-
       initializeApp({
         projectId,
-        credential: serviceAccount,
+        credential: getFirebaseCredential(projectId),
       });
     }
 
@@ -99,6 +101,20 @@ async function withFirestoreTimeout<T>(operation: Promise<T>): Promise<T> {
   }
 }
 
+
+
+function validateCachedPayload<T>(payload: unknown): Result<T> {
+  if (!isSafePinDocument(payload)) {
+    return err("Cache miss: Document malformed");
+  }
+
+  if (isExpired(payload.expiresAt)) {
+    return err("Cache miss: Document expired");
+  }
+
+  return ok(payload.data as T);
+}
+
 /**
  * Retrieves a cached PIN lookup from Cloud Firestore.
  * Returns ok with data, or err on miss, expiry, timeout, or Firestore unavailability.
@@ -118,12 +134,7 @@ export async function getCachedPin<T extends object = Record<string, unknown>>(
       return err("Cache miss: PIN not found in cache");
     }
 
-    const payload = snapshot.data();
-    if (!isSafePinDocument(payload) || isExpired(payload.expiresAt)) {
-      return err("Cache miss: Document expired or malformed");
-    }
-
-    return ok(payload.data as T);
+    return validateCachedPayload<T>(snapshot.data());
   } catch (error) {
     return err(
       "Firestore PIN cache read failed",

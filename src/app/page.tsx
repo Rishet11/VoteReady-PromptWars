@@ -22,17 +22,69 @@ const ElectionGlossary = dynamic(() => import("@/components/ElectionGlossary").t
 
 type PinLookupResponse =
   | {
-      found: true;
-      cached: boolean;
-      mapping: PinStateMap;
-    }
+    found: true;
+    cached: boolean;
+    mapping: PinStateMap;
+  }
   | {
-      found: false;
-      cached: false;
-    }
+    found: false;
+    cached: false;
+  }
   | {
-      error: string;
-    };
+    error: string;
+  };
+
+async function executePinLookup(pin: string): Promise<Exclude<PinLookupResponse, { error: string }>> {
+  const response = await fetch("/api/pin-lookup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pin }),
+  });
+  
+  const result = (await response.json()) as PinLookupResponse;
+  if (!response.ok) {
+    throw new Error("PIN lookup failed");
+  }
+  if ("error" in result) {
+    throw new Error("PIN lookup failed");
+  }
+  
+  return result;
+}
+
+function handleInvalidPin(callbacks: {
+  setActiveState: (s: StateElectionData | null) => void;
+  setActivePollingPlace: (p: PollingPlace | null) => void;
+  setShowGuidance: (s: boolean) => void;
+  setIsLookingUpPin: (s: boolean) => void;
+}) {
+  callbacks.setActiveState(null);
+  callbacks.setActivePollingPlace(null);
+  callbacks.setShowGuidance(false);
+  callbacks.setIsLookingUpPin(false);
+}
+
+function handleSuccessfulLookup(
+  result: Exclude<PinLookupResponse, { error: string }>,
+  callbacks: {
+    setActiveState: (s: StateElectionData | null) => void;
+    setActivePollingPlace: (p: PollingPlace | null) => void;
+    setShowStatePicker: (s: boolean) => void;
+    setShowGuidance: (s: boolean) => void;
+  }
+) {
+  if (result.found) {
+    callbacks.setActiveState(electionData[result.mapping.state] || null);
+    callbacks.setActivePollingPlace(result.mapping.pollingPlace);
+    callbacks.setShowStatePicker(false);
+    callbacks.setShowGuidance(false);
+    trackEvent('lookup_pin', 'engagement', result.mapping.state);
+    return;
+  }
+
+  callbacks.setShowStatePicker(true);
+  trackEvent('lookup_pin_fail', 'engagement', 'unmapped_pin');
+}
 
 export default function Home() {
   const [activeState, setActiveState] = useState<StateElectionData | null>(null);
@@ -47,42 +99,20 @@ export default function Home() {
     lookupRequestIdRef.current = requestId;
 
     if (!isValid) {
-      setActiveState(null);
-      setActivePollingPlace(null);
-      setShowGuidance(false);
-      setIsLookingUpPin(false);
+      handleInvalidPin({ setActiveState, setActivePollingPlace, setShowGuidance, setIsLookingUpPin });
       return;
     }
 
     setIsLookingUpPin(true);
 
     try {
-      const response = await fetch("/api/pin-lookup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin }),
-      });
+      const result = await executePinLookup(pin);
 
       if (lookupRequestIdRef.current !== requestId) {
         return;
       }
 
-      const result = (await response.json()) as PinLookupResponse;
-      if (!response.ok || "error" in result) {
-        throw new Error("PIN lookup failed");
-      }
-
-      if (result.found) {
-        setActiveState(electionData[result.mapping.state] || null);
-        setActivePollingPlace(result.mapping.pollingPlace);
-        setShowStatePicker(false);
-        setShowGuidance(false);
-        trackEvent('lookup_pin', 'engagement', result.mapping.state);
-        return;
-      }
-
-      setShowStatePicker(true);
-      trackEvent('lookup_pin_fail', 'engagement', 'unmapped_pin');
+      handleSuccessfulLookup(result, { setActiveState, setActivePollingPlace, setShowStatePicker, setShowGuidance });
     } catch {
       if (lookupRequestIdRef.current === requestId) {
         setShowStatePicker(true);

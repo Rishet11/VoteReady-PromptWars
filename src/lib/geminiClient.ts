@@ -26,6 +26,26 @@ export function getGeminiModelName() {
   return process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
 }
 
+interface GeminiCandidate {
+  content?: {
+    parts?: Array<{ text?: string }>;
+  };
+}
+
+interface GeminiResponse {
+  candidates?: GeminiCandidate[];
+}
+
+function getPartsFromResponse(result: GeminiResponse) {
+  return result.candidates?.[0]?.content?.parts;
+}
+
+function extractTextFromResult(result: GeminiResponse): string {
+  const parts = getPartsFromResponse(result);
+  const part = parts?.[0];
+  return part?.text?.trim() || '';
+}
+
 /**
  * Generates post-registration voter guidance using Google Gemini.
  * Uses Vertex AI to ensure production-grade security and low latency.
@@ -45,8 +65,7 @@ export async function generateGuidance(systemInstruction: string, prompt: string
   });
 
   const response = await generativeModel.generateContent(prompt);
-  const result = await response.response;
-  const text = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+  const text = extractTextFromResult(await response.response);
   
   if (text) {
     console.info(JSON.stringify({

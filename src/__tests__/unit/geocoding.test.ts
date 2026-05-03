@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { resolvePinToState } from '@/lib/geocoding';
 
 global.fetch = vi.fn();
@@ -23,7 +23,7 @@ describe('geocoding utility', () => {
       }]
     };
 
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as Mock).mockResolvedValue({
       json: () => Promise.resolve(mockResponse)
     });
 
@@ -45,7 +45,7 @@ describe('geocoding utility', () => {
   });
 
   it('returns error when API status is not OK', async () => {
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as Mock).mockResolvedValue({
       json: () => Promise.resolve({ status: 'ZERO_RESULTS', results: [] })
     });
 
@@ -54,7 +54,7 @@ describe('geocoding utility', () => {
   });
 
   it('returns error on fetch failure', async () => {
-    (global.fetch as any).mockRejectedValue(new Error('Network error'));
+    (global.fetch as Mock).mockRejectedValue(new Error('Network error'));
     const result = await resolvePinToState('110001');
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -76,7 +76,7 @@ describe('geocoding utility', () => {
       }]
     };
 
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as Mock).mockResolvedValue({
       json: () => Promise.resolve(mockResponse)
     });
 
@@ -101,7 +101,7 @@ describe('geocoding utility', () => {
       }]
     };
 
-    (global.fetch as any).mockResolvedValue({
+    (global.fetch as Mock).mockResolvedValue({
       json: () => Promise.resolve(mockResponse)
     });
 

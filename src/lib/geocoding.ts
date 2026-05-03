@@ -18,6 +18,17 @@ interface GeocodingAddressComponent {
   types: string[];
 }
 
+interface GeocodingResult {
+  address_components: GeocodingAddressComponent[];
+  formatted_address: string;
+  geometry: {
+    location: {
+      lat: number;
+      lng: number;
+    };
+  };
+}
+
 const STATE_NAME_TO_CODE: Readonly<Record<string, string>> = {
   "Andaman and Nicobar Islands": "AN",
   "Andhra Pradesh": "AP",
@@ -58,14 +69,13 @@ const STATE_NAME_TO_CODE: Readonly<Record<string, string>> = {
   "West Bengal": "WB",
 };
 
-export async function resolvePinToState(pin: string): Promise<Result<GeocodedLocation>> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    return err("Geocoding failed: Missing API Key");
-  }
+function findStateComponent(addressComponents: readonly GeocodingAddressComponent[]): GeocodingAddressComponent | undefined {
+  return addressComponents.find((c) =>
+    c.types.includes("administrative_area_level_1")
+  );
+}
 
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${pin},India&key=${apiKey}`;
-
+async function fetchGeocoding(url: string): Promise<Result<GeocodingResult>> {
   try {
     const response = await fetch(url);
     const data = await response.json();
@@ -74,26 +84,41 @@ export async function resolvePinToState(pin: string): Promise<Result<GeocodedLoc
       return err(`Geocoding returned status: ${data.status}`);
     }
 
-    const result = data.results[0];
-    const addressComponents = result.address_components;
-    
-    // Find state component (administrative_area_level_1)
-    const stateComponent = addressComponents.find((c: GeocodingAddressComponent) => 
-      c.types.includes("administrative_area_level_1")
-    );
-
-    if (!stateComponent) return err("State not found in geocoding results");
-
-    const stateName = stateComponent.long_name;
-    const stateCode = STATE_NAME_TO_CODE[stateName] || stateName; // Fallback to name if code not found
-
-    return ok({
-      state: stateCode,
-      lat: result.geometry.location.lat,
-      lng: result.geometry.location.lng,
-      formattedAddress: result.formatted_address,
-    });
+    return ok(data.results[0] as GeocodingResult);
   } catch (error) {
-    return err("Geocoding request error", error instanceof Error ? error : new Error(String(error)));
+    return err(
+      "Geocoding request error",
+      error instanceof Error ? error : new Error(String(error))
+    );
   }
+}
+
+export async function resolvePinToState(pin: string): Promise<Result<GeocodedLocation>> {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  if (!apiKey) {
+    return err("Geocoding failed: Missing API Key");
+  }
+
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${pin},India&key=${apiKey}`;
+  const fetchResult = await fetchGeocoding(url);
+  if (!fetchResult.ok) {
+    return fetchResult;
+  }
+
+  const result = fetchResult.value;
+  const stateComponent = findStateComponent(result.address_components);
+
+  if (!stateComponent) {
+    return err("State not found in geocoding results");
+  }
+
+  const stateName = stateComponent.long_name;
+  const stateCode = STATE_NAME_TO_CODE[stateName] || stateName;
+
+  return ok({
+    state: stateCode,
+    lat: result.geometry.location.lat,
+    lng: result.geometry.location.lng,
+    formattedAddress: result.formatted_address,
+  });
 }

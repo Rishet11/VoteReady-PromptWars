@@ -33,6 +33,18 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string)
   ]);
 }
 
+interface GoogleTranslation {
+  translatedText?: string | null;
+}
+
+interface GoogleTranslateResponse {
+  translations?: GoogleTranslation[] | null;
+}
+
+function getTranslatedText(response: GoogleTranslateResponse): string | null {
+  return response.translations?.[0]?.translatedText || null;
+}
+
 /**
  * Translates text to a supported Indian language using Google Cloud Translation API.
  * Returns ok with translated result or err on failure.
@@ -63,11 +75,9 @@ export async function translateText(
       'Translation API timeout'
     );
 
-    if (response.translations && response.translations.length > 0) {
-      const translatedText = response.translations[0]?.translatedText;
-      if (translatedText) {
-        return ok({ text: translatedText, translated: true });
-      }
+    const translatedText = getTranslatedText(response);
+    if (translatedText) {
+      return ok({ text: translatedText, translated: true });
     }
 
     return err("Translation failed: No translation returned");

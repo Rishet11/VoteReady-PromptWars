@@ -46,32 +46,51 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string)
   ]);
 }
 
-async function parseGuidanceRequest(request: Request): Promise<Result<{ sanitizedStateCode: string; language: SupportedLanguageCode }>> {
+async function extractRequestBody(request: Request): Promise<Record<string, unknown> | null> {
   try {
-    const body = (await request.json()) as Record<string, unknown>;
-    const sanitizedStateCode = sanitizeInput(
-      typeof body.stateCode === 'string' ? body.stateCode : ''
-    );
-    const language = typeof body.language === 'string' ? body.language : 'en';
-
-    if (!isSupportedLanguageCode(language)) {
-      return err('Unsupported language');
-    }
-
-    if (!sanitizedStateCode || !electionData[sanitizedStateCode]) {
-      return err('Invalid or missing state code');
-    }
-
-    return ok({ sanitizedStateCode, language: language as SupportedLanguageCode });
+    return (await request.json()) as Record<string, unknown>;
   } catch {
+    return null;
+  }
+}
+
+function extractStateCode(body: Record<string, unknown>): string {
+  const rawStateCode = typeof body.stateCode === 'string' ? body.stateCode : '';
+  return sanitizeInput(rawStateCode);
+}
+
+function extractLanguage(body: Record<string, unknown>): string {
+  return typeof body.language === 'string' ? body.language : 'en';
+}
+
+function validateStateCode(stateCode: string): boolean {
+  return Boolean(stateCode && electionData[stateCode]);
+}
+
+async function parseGuidanceRequest(request: Request): Promise<Result<{ sanitizedStateCode: string; language: SupportedLanguageCode }>> {
+  const body = await extractRequestBody(request);
+  if (!body) {
     return err('Invalid JSON body');
   }
+
+  const sanitizedStateCode = extractStateCode(body);
+  const language = extractLanguage(body);
+
+  if (!isSupportedLanguageCode(language)) {
+    return err('Unsupported language');
+  }
+
+  if (!validateStateCode(sanitizedStateCode)) {
+    return err('Invalid or missing state code');
+  }
+
+  return ok({ sanitizedStateCode, language: language as SupportedLanguageCode });
 }
 
 async function fetchFromGemini(stateCode: string): Promise<Result<string>> {
   const stateInfo = electionData[stateCode];
   if (!stateInfo) return err('State info not found');
-  
+
   try {
     const guidance = await withTimeout(
       generateGuidance(
@@ -92,11 +111,32 @@ async function fetchFromGemini(stateCode: string): Promise<Result<string>> {
   }
 }
 
+async function applyTranslationIfNeeded(
+  response: GuidanceResponse,
+  language: SupportedLanguageCode,
+  generatedGuidance: string | null
+): Promise<GuidanceResponse> {
+  if (language === 'en' || !generatedGuidance) {
+    return response;
+  }
+
+  const translationResult = await translateText(generatedGuidance, language);
+  if (translationResult.ok) {
+    return {
+      ...response,
+      guidance: translationResult.value.text,
+      translated: translationResult.value.translated,
+    };
+  }
+
+  return response;
+}
+
 async function processGuidance(stateCode: string, language: SupportedLanguageCode): Promise<GuidanceResponse> {
   const geminiResult = await fetchFromGemini(stateCode);
   const generatedGuidance = geminiResult.ok ? geminiResult.value : null;
-  
-  let response: GuidanceResponse = {
+
+  const response: GuidanceResponse = {
     guidance: generatedGuidance || STANDARD_FALLBACK_GUIDANCE,
     fallback: !generatedGuidance,
     cached: false,
@@ -105,29 +145,28 @@ async function processGuidance(stateCode: string, language: SupportedLanguageCod
     source: generatedGuidance ? 'gemini' : 'standard',
   };
 
-  if (language !== 'en' && generatedGuidance) {
-    const translationResult = await translateText(generatedGuidance, language);
-    if (translationResult.ok) {
-      response = {
-        ...response,
-        guidance: translationResult.value.text,
-        translated: translationResult.value.translated,
-      };
-    }
-  }
+  return applyTranslationIfNeeded(response, language, generatedGuidance);
+}
 
-  return response;
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unknown error';
+}
+
+function cacheResponseIfNeeded(response: GuidanceResponse, cacheKey: string) {
+  if (response.fallback) return;
+  if (!response.translated) return;
+  setCachedGuidance(cacheKey, response, CACHE_TTL_MS);
 }
 
 export async function POST(request: Request) {
   const startTime = Date.now();
-  
+
   try {
     const parsedResult = await parseGuidanceRequest(request);
     if (!parsedResult.ok) {
       return apiResponse.badRequest(parsedResult.message, CACHE_HEADERS.NO_STORE);
     }
-    
+
     const { sanitizedStateCode, language } = parsedResult.value;
     const cacheKey = `${sanitizedStateCode}:${language}`;
     const cached = getCachedGuidance(cacheKey);
@@ -139,9 +178,7 @@ export async function POST(request: Request) {
 
     const response = await processGuidance(sanitizedStateCode, language);
 
-    if (!response.fallback && response.translated) {
-      setCachedGuidance(cacheKey, response, CACHE_TTL_MS);
-    }
+    cacheResponseIfNeeded(response, cacheKey);
 
     logger.info({
       event: 'api_success',
@@ -158,7 +195,7 @@ export async function POST(request: Request) {
     logger.error({
       event: 'api_fallback',
       message: 'Guidance API event: api_fallback',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: getErrorMessage(error),
       durationMs: Date.now() - startTime,
     });
 

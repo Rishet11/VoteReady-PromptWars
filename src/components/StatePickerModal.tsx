@@ -9,6 +9,41 @@ interface StatePickerModalProps {
   onSelectState: (stateCode: string) => void;
 }
 
+function applyFocusConstraint(
+  event: KeyboardEvent<HTMLDivElement>,
+  firstElement: HTMLElement,
+  lastElement: HTMLElement
+) {
+  if (event.shiftKey && document.activeElement === firstElement) {
+    event.preventDefault();
+    lastElement.focus();
+  } else if (!event.shiftKey && document.activeElement === lastElement) {
+    event.preventDefault();
+    firstElement.focus();
+  }
+}
+
+function handleTabKeyFocus(
+  event: KeyboardEvent<HTMLDivElement>,
+  modalRef: React.RefObject<HTMLDivElement | null>
+) {
+  if (event.key !== 'Tab' || !modalRef.current) {
+    return;
+  }
+
+  const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
+    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  if (!firstElement || !lastElement) {
+    return;
+  }
+
+  applyFocusConstraint(event, firstElement, lastElement);
+}
+
 export function StatePickerModal({ isOpen, onClose, onSelectState }: StatePickerModalProps) {
   const [selected, setSelected] = useState<string>('');
   const modalRef = useRef<HTMLDivElement>(null);
@@ -44,35 +79,15 @@ export function StatePickerModal({ isOpen, onClose, onSelectState }: StatePicker
       return;
     }
 
-    if (event.key !== 'Tab' || !modalRef.current) {
-      return;
-    }
-
-    const focusableElements = modalRef.current.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-
-    if (!firstElement || !lastElement) {
-      return;
-    }
-
-    if (event.shiftKey && document.activeElement === firstElement) {
-      event.preventDefault();
-      lastElement.focus();
-    } else if (!event.shiftKey && document.activeElement === lastElement) {
-      event.preventDefault();
-      firstElement.focus();
-    }
+    handleTabKeyFocus(event, modalRef);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div 
+      <div
         ref={modalRef}
-        role="dialog" 
-        aria-modal="true" 
+        role="dialog"
+        aria-modal="true"
         aria-labelledby="modal-title"
         tabIndex={-1}
         onKeyDown={handleKeyDown}
@@ -84,7 +99,7 @@ export function StatePickerModal({ isOpen, onClose, onSelectState }: StatePicker
             <MapPin className="w-5 h-5 text-blue-600" />
             Select Your State
           </h2>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Close dialog"
@@ -101,12 +116,12 @@ export function StatePickerModal({ isOpen, onClose, onSelectState }: StatePicker
 
           <div className="space-y-2 max-h-[40vh] overflow-y-auto p-1">
             {states.map((state) => (
-              <label 
+              <label
                 key={state.code}
                 className={cn(
                   "flex items-center p-3 border rounded-lg cursor-pointer transition-all",
-                  selected === state.code 
-                    ? "border-blue-600 bg-blue-50 ring-1 ring-blue-600" 
+                  selected === state.code
+                    ? "border-blue-600 bg-blue-50 ring-1 ring-blue-600"
                     : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                 )}
               >
