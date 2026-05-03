@@ -108,7 +108,7 @@ This project has undergone a rigorous 10-phase engineering audit to achieve 100%
 2. **Environment Setup**:
    Create `.env.local`:
    ```env
-   GEMINI_MODEL="gemini-3-flash-preview"
+   GEMINI_MODEL="gemini-1.5-flash-002"
    GOOGLE_CLOUD_PROJECT_ID="your_google_cloud_project_id"
    FIRESTORE_PROJECT_ID="your_firestore_project_id"
    GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"

@@ -10,7 +10,7 @@ import { VERTEX_AI_REGION } from './constants/geo';
 import { logger } from './logger';
 import { Result, ok, err } from './result';
 
-const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
+const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash-002';
 
 let vertexAI: VertexAI | null = null;
 

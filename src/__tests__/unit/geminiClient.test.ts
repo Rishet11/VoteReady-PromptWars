@@ -47,7 +47,7 @@ describe('geminiClient', () => {
     vi.resetModules();
     delete process.env.GEMINI_MODEL;
     const { getGeminiModelName } = await import('@/lib/geminiClient');
-    expect(getGeminiModelName()).toBe('gemini-3-flash-preview');
+    expect(getGeminiModelName()).toBe('gemini-1.5-flash-002');
   });
 
   it('returns env model name if set', async () => {
