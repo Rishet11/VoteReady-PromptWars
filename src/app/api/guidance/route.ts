@@ -103,6 +103,12 @@ async function fetchFromGemini(stateCode: string): Promise<Result<string>> {
     'Gemini API timeout'
   );
 } catch (error) {
+    logger.error({
+      event: 'gemini_error',
+      message: 'Gemini API call failed',
+      error: getErrorMessage(error),
+      stateCode
+    });
     return err('fetchFromGemini: Gemini API call failed for state: ' + stateCode, error instanceof Error ? error : new Error(String(error)));
   }
 }
