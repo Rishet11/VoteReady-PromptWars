@@ -89,7 +89,7 @@ async function parseGuidanceRequest(request: Request): Promise<Result<{ sanitize
 
 async function fetchFromGemini(stateCode: string): Promise<Result<string>> {
   const stateInfo = electionData[stateCode];
-  if (!stateInfo) return err('State info not found');
+  if (!stateInfo) return err(`fetchFromGemini: election data not found for state code: ${stateCode}`);
 
   try {
     const guidance = await withTimeout(
@@ -107,7 +107,7 @@ async function fetchFromGemini(stateCode: string): Promise<Result<string>> {
     );
     return ok(guidance);
   } catch (error) {
-    return err('Gemini fetch failed', error instanceof Error ? error : new Error(String(error)));
+    return err('fetchFromGemini: Gemini API call failed for state: ' + stateCode, error instanceof Error ? error : new Error(String(error)));
   }
 }
 

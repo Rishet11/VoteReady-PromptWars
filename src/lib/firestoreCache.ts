@@ -109,11 +109,11 @@ async function withFirestoreTimeout<T>(operation: Promise<T>): Promise<T> {
 
 function validateCachedPayload<T>(payload: unknown): Result<T> {
   if (!isSafePinDocument(payload)) {
-    return err("Cache miss: Document malformed");
+    return err("validateCachedPayload: Cache miss — document malformed (missing or null data field)");
   }
 
   if (isExpired(payload.expiresAt)) {
-    return err("Cache miss: Document expired");
+    return err("validateCachedPayload: Cache miss — document expired");
   }
 
   return ok(payload.data as T);
@@ -141,7 +141,7 @@ export async function getCachedPin<T extends object = Record<string, unknown>>(
     return validateCachedPayload<T>(snapshot.data());
   } catch (error) {
     return err(
-      "Firestore PIN cache read failed",
+      "getCachedPin: Firestore cache read failed for pin: " + pin,
       error instanceof Error ? error : new Error(String(error))
     );
   }
