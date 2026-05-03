@@ -6,9 +6,9 @@
  */
 
 import { VertexAI } from '@google-cloud/vertexai';
+import { VERTEX_AI_REGION } from './constants/geo';
 
 const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
-const location = 'asia-south1'; // Matches the region in the Cloud Run URL
 
 let vertexAI: VertexAI | null = null;
 
@@ -17,7 +17,7 @@ function getVertexClient() {
   if (!projectId) {
     throw new Error('GOOGLE_CLOUD_PROJECT_ID is not set');
   }
-  vertexAI ??= new VertexAI({ project: projectId, location });
+  vertexAI ??= new VertexAI({ project: projectId, location: VERTEX_AI_REGION });
   return vertexAI;
 }
 

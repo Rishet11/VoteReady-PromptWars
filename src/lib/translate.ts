@@ -8,9 +8,7 @@
 import { TranslationServiceClient } from '@google-cloud/translate';
 import type { SupportedLanguageCode } from './languages';
 import { Result, ok, err } from './result';
-
-const location = 'global';
-const TRANSLATION_TIMEOUT_MS = 3000;
+import { TRANSLATION_TIMEOUT_MS } from './constants/timeouts';
 
 let translationClient: TranslationServiceClient | null = null;
 
@@ -62,7 +60,7 @@ export async function translateText(
 
   try {
     const request = {
-      parent: `projects/${projectId}/locations/${location}`,
+      parent: `projects/${projectId}/locations/global`,
       contents: [text],
       mimeType: 'text/plain',
       sourceLanguageCode: 'en',

@@ -17,11 +17,11 @@ import {
 } from '@/lib';
 import { electionData } from '@/data/electionData';
 import { CACHE_HEADERS } from '@/lib/constants/headers';
+import { GEMINI_TIMEOUT_MS } from '@/lib/constants/timeouts';
 
 export const runtime = 'nodejs';
 
 const CACHE_TTL_MS = 60 * 60 * 1000;
-const GEMINI_TIMEOUT_MS = 5000;
 
 const STANDARD_FALLBACK_GUIDANCE = `
 You're heading to the registration portal.

@@ -9,10 +9,14 @@
 import { applicationDefault, cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp, type Firestore } from "firebase-admin/firestore";
 import { Result, ok, err } from "./result";
+import {
+  PIN_CACHE_COLLECTION,
+  PIN_CACHE_TTL_MS as PIN_CACHE_TTL_MS_CONST,
+  FIRESTORE_CACHE_TIMEOUT_MS,
+} from "./constants/cache";
 
-export const PIN_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const PIN_CACHE_COLLECTION = "pinLookupCache";
-const FIRESTORE_CACHE_TIMEOUT_MS = 800;
+/** Time-to-live for cached PIN entries. Re-exported for backward compatibility. */
+export const PIN_CACHE_TTL_MS = PIN_CACHE_TTL_MS_CONST;
 
 type FirestorePinDocument<T extends object> = {
   data: T;
