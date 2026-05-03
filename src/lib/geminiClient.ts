@@ -28,9 +28,12 @@ export function getGeminiModelName() {
 
 /**
  * Generates post-registration voter guidance using Google Gemini.
+ * Uses Vertex AI to ensure production-grade security and low latency.
+ * 
  * @param systemInstruction - The system prompt defining the AI's persona and constraints.
  * @param prompt - The user-facing prompt with state-specific election details.
  * @returns The generated guidance text, or an empty string if generation fails.
+ * @throws {Error} If GOOGLE_CLOUD_PROJECT_ID is missing or API call fails.
  */
 export async function generateGuidance(systemInstruction: string, prompt: string): Promise<string> {
   const generativeModel = getVertexClient().getGenerativeModel({

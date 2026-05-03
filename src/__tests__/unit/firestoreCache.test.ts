@@ -70,12 +70,12 @@ describe("firestoreCache", () => {
     getFirestore.mockReturnValue(firestore.db);
     const { getCachedPin } = await importCacheModule();
 
-    await expect(getCachedPin("110001")).resolves.toEqual({ state: "DL" });
+    await expect(getCachedPin("110001")).resolves.toEqual({ ok: true, value: { state: "DL" } });
     expect(firestore.collection).toHaveBeenCalledWith("pinLookupCache");
     expect(firestore.doc).toHaveBeenCalledWith("110001");
   });
 
-  it("returns null when a PIN document is missing", async () => {
+  it("returns error when a PIN document is missing", async () => {
     const firestore = createFirestoreMock({
       exists: false,
       data: () => undefined,
@@ -83,7 +83,7 @@ describe("firestoreCache", () => {
     getFirestore.mockReturnValue(firestore.db);
     const { getCachedPin } = await importCacheModule();
 
-    await expect(getCachedPin("999999")).resolves.toBeNull();
+    await expect(getCachedPin("999999")).resolves.toMatchObject({ ok: false });
   });
 
   it("writes cached PIN data with a 24 hour TTL", async () => {
@@ -105,5 +105,107 @@ describe("firestoreCache", () => {
       cachedAt: expect.any(Object),
       expiresAt: expect.any(Object),
     });
+  });
+
+  it("returns error when Firestore client is unavailable (missing project ID)", async () => {
+    delete process.env.FIRESTORE_PROJECT_ID;
+    delete process.env.GOOGLE_CLOUD_PROJECT_ID;
+    const { getCachedPin } = await importCacheModule();
+    const result = await getCachedPin("110001");
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toBe("Firestore client unavailable");
+    }
+  });
+
+  it("returns error when document is expired", async () => {
+    const firestore = createFirestoreMock({
+      exists: true,
+      data: () => ({
+        data: { state: "DL" },
+        expiresAt: { toDate: () => new Date(Date.now() - 60_000) },
+      }),
+    });
+    getFirestore.mockReturnValue(firestore.db);
+    const { getCachedPin } = await importCacheModule();
+    const result = await getCachedPin("110001");
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("expired");
+    }
+  });
+
+  it("handles Firestore operation timeout", async () => {
+    vi.useFakeTimers();
+    const slowFirestore = {
+      collection: () => ({
+        doc: () => ({
+          get: () => new Promise(() => {}),
+        }),
+      }),
+    };
+    getFirestore.mockReturnValue(slowFirestore);
+    const { getCachedPin } = await importCacheModule();
+    
+    const pending = getCachedPin("110001");
+    await vi.advanceTimersByTimeAsync(1000);
+    const result = await pending;
+    
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("read failed");
+    }
+  });
+
+  it("returns error when document is malformed (missing data field)", async () => {
+    const firestore = createFirestoreMock({
+      exists: true,
+      data: () => ({
+        // missing 'data' field
+        expiresAt: { toDate: () => new Date(Date.now() + 60_000) },
+      }),
+    });
+    getFirestore.mockReturnValue(firestore.db);
+    const { getCachedPin } = await importCacheModule();
+    const result = await getCachedPin("110001");
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toContain("malformed");
+    }
+  });
+
+  it("handles Firestore unavailability (getFirestore throws)", async () => {
+    getFirestore.mockImplementation(() => {
+      throw new Error("Firestore crash");
+    });
+    const { getCachedPin } = await importCacheModule();
+    const result = await getCachedPin("110001");
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.message).toBe("Firestore client unavailable");
+    }
+  });
+
+  it("returns error when document is not an object", async () => {
+    const firestore = createFirestoreMock({
+      exists: true,
+      data: () => "not-an-object",
+    });
+    getFirestore.mockReturnValue(firestore.db);
+    const { getCachedPin } = await importCacheModule();
+    const result = await getCachedPin("110001");
+    expect(result.ok).toBe(false);
+  });
+
+  it("silently fails on write error", async () => {
+    const firestore = createFirestoreMock({
+      exists: true,
+      data: () => ({ data: {} }),
+    });
+    firestore.set.mockRejectedValue(new Error("Write error"));
+    getFirestore.mockReturnValue(firestore.db);
+    const { setCachedPin } = await importCacheModule();
+    
+    await expect(setCachedPin("110001", { state: "DL" })).resolves.toBeUndefined();
   });
 });

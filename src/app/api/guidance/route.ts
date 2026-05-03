@@ -1,18 +1,22 @@
-import { generateGuidance } from '@/lib/geminiClient';
-import { getSystemPrompt, getUserPrompt } from '@/lib/geminiPrompts';
-import { electionData } from '@/data/electionData';
-import { sanitizeInput } from '@/lib/sanitize';
-import { translateText } from '@/lib/translate';
 import {
+  generateGuidance,
+  getSystemPrompt,
+  getUserPrompt,
+  sanitizeInput,
+  translateText,
   isSupportedLanguageCode,
   type SupportedLanguageCode,
-} from '@/lib/languages';
-import { getCachedGuidance, setCachedGuidance } from '@/lib/guidanceCache';
-import type { GuidanceResponse } from '@/lib/guidanceTypes';
-import { logger } from '@/lib/logger';
-import { apiResponse } from '@/lib/apiResponse';
+  getCachedGuidance,
+  setCachedGuidance,
+  type GuidanceResponse,
+  logger,
+  apiResponse,
+  Result,
+  ok,
+  err
+} from '@/lib';
+import { electionData } from '@/data/electionData';
 import { CACHE_HEADERS } from '@/lib/constants/headers';
-import { Result, ok, err } from '@/lib/result';
 
 export const runtime = 'nodejs';
 

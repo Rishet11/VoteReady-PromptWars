@@ -5,12 +5,8 @@
 export function sanitizeInput(input: string): string {
   if (!input) return "";
   
-  // Remove HTML tags
   let sanitized = input.replace(/<\/?[^>]+(>|$)/g, "");
-  
-  // Remove special characters except alphanumeric, space, dash, and underscore
   sanitized = sanitized.replace(/[^\w\s-]/gi, "");
-  
   return sanitized.trim();
 }
 

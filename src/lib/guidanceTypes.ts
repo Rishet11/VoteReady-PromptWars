@@ -8,10 +8,10 @@ import type { SupportedLanguageCode } from './languages';
 export type GuidanceSource = 'gemini' | 'standard';
 
 export interface GuidanceResponse {
-  guidance: string;
-  fallback: boolean;
-  cached: boolean;
-  language: SupportedLanguageCode;
-  translated: boolean;
-  source: GuidanceSource;
+  readonly guidance: string;
+  readonly fallback: boolean;
+  readonly cached: boolean;
+  readonly language: SupportedLanguageCode;
+  readonly translated: boolean;
+  readonly source: GuidanceSource;
 }

@@ -3,8 +3,8 @@ import { cn } from '@/lib/utils';
 import type { StateElectionData } from '@/data/electionData';
 
 interface EligibilityCardProps {
-  stateData: StateElectionData;
-  className?: string;
+  readonly stateData: StateElectionData;
+  readonly className?: string;
 }
 
 export function EligibilityCard({ stateData, className }: EligibilityCardProps) {

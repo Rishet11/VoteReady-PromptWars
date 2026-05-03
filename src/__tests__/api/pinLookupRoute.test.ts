@@ -94,6 +94,6 @@ describe("POST /api/pin-lookup", () => {
     const json = await responseJson(response);
 
     expect(response.status).toBe(400);
-    expect(json.error).toBe("Invalid PIN code");
+    expect(json.error).toBe("Invalid PIN code format");
   });
 });

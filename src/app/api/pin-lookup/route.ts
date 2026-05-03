@@ -1,10 +1,15 @@
 import { pinToStateMap, type PinStateMap } from "@/data/pinToState";
-import { getCachedPin, setCachedPin } from "@/lib/firestoreCache";
-import { isValidPinCode } from "@/lib/sanitize";
-import { resolvePinToState } from "@/lib/geocoding";
-import { apiResponse } from "@/lib/apiResponse";
+import {
+  getCachedPin,
+  setCachedPin,
+  isValidPinCode,
+  resolvePinToState,
+  apiResponse,
+  Result,
+  ok,
+  err
+} from "@/lib";
 import { CACHE_HEADERS } from "@/lib/constants/headers";
-import { Result, ok, err } from "@/lib/result";
 
 export const runtime = "nodejs";
 

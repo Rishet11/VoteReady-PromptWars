@@ -61,5 +61,8 @@
     "retry-request": "^8.0.2",
     "teeny-request": "^10.1.2",
     "uuid": "^14.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

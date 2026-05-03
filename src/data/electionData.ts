@@ -1,16 +1,16 @@
 export interface StateElectionData {
-  name: string;
-  code: string;
-  deadline: string; // ISO format date (YYYY-MM-DD)
-  electionType: string;
-  electionDate: string; // ISO format date (YYYY-MM-DD)
-  residencyDays: number;
-  registrationUrl: string;
-  verificationUrl: string;
-  voterHelpline: string;
+  readonly name: string;
+  readonly code: string;
+  readonly deadline: string;
+  readonly electionType: string;
+  readonly electionDate: string;
+  readonly residencyDays: number;
+  readonly registrationUrl: string;
+  readonly verificationUrl: string;
+  readonly voterHelpline: string;
 }
 
-export const electionData: Record<string, StateElectionData> = {
+export const electionData: Readonly<Record<string, StateElectionData>> = {
   "AN": { name: "Andaman and Nicobar Islands", code: "AN", deadline: "2026-05-15", electionType: "General Election", electionDate: "2026-05-30", residencyDays: 180, registrationUrl: "https://voters.eci.gov.in/", verificationUrl: "https://electoralsearch.eci.gov.in/", voterHelpline: "1950" },
   "AP": { name: "Andhra Pradesh", code: "AP", deadline: "2026-05-15", electionType: "General Election", electionDate: "2026-05-30", residencyDays: 180, registrationUrl: "https://voters.eci.gov.in/", verificationUrl: "https://electoralsearch.eci.gov.in/", voterHelpline: "1950" },
   "AR": { name: "Arunachal Pradesh", code: "AR", deadline: "2026-05-15", electionType: "General Election", electionDate: "2026-05-30", residencyDays: 180, registrationUrl: "https://voters.eci.gov.in/", verificationUrl: "https://electoralsearch.eci.gov.in/", voterHelpline: "1950" },

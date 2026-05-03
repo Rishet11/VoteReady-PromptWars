@@ -2,17 +2,18 @@
 
 import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { PinInput } from "@/components/PinInput";
-import { EligibilityCard } from "@/components/EligibilityCard";
-import { DeadlineCard } from "@/components/DeadlineCard";
-import { CtaButton } from "@/components/CtaButton";
-import { StatePickerModal } from "@/components/StatePickerModal";
-import { SkipLink } from "@/components/SkipLink";
+import {
+  PinInput,
+  EligibilityCard,
+  DeadlineCard,
+  CtaButton,
+  StatePickerModal,
+  SkipLink,
+  trackEvent
+} from "@/components";
 import { type PollingPlace, type PinStateMap } from "@/data/pinToState";
 import { electionData, type StateElectionData } from "@/data/electionData";
 import { CheckCircle2 } from "lucide-react";
-import { trackEvent } from "@/components/GoogleAnalytics";
-
 // Dynamic imports for efficiency — only loaded when user triggers the relevant UI
 const PostRegGuidance = dynamic(() => import("@/components/PostRegGuidance").then(mod => mod.PostRegGuidance), { ssr: false });
 const PollingPlaceCard = dynamic(() => import("@/components/PollingPlaceCard").then(mod => mod.PollingPlaceCard), { ssr: false });

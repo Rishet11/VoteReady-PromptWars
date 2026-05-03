@@ -5,10 +5,10 @@
 import { Result, ok, err } from './result';
 
 export interface GeocodedLocation {
-  state: string;
-  lat: number;
-  lng: number;
-  formattedAddress: string;
+  readonly state: string;
+  readonly lat: number;
+  readonly lng: number;
+  readonly formattedAddress: string;
 }
 
 /** Shape of a single address component from the Google Geocoding API. */
@@ -18,7 +18,7 @@ interface GeocodingAddressComponent {
   types: string[];
 }
 
-const STATE_NAME_TO_CODE: Record<string, string> = {
+const STATE_NAME_TO_CODE: Readonly<Record<string, string>> = {
   "Andaman and Nicobar Islands": "AN",
   "Andhra Pradesh": "AP",
   "Arunachal Pradesh": "AR",

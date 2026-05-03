@@ -1,3 +1,7 @@
+/**
+ * Discriminated union for functional error handling.
+ * Forces explicit checking of success/failure states to improve type safety.
+ */
 export type Result<T, E = Error> =
   | { ok: true; value: T }
   | { ok: false; error: E; message: string };
