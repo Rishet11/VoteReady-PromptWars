@@ -8,6 +8,7 @@
 
 import { applicationDefault, cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp, type Firestore } from "firebase-admin/firestore";
+import { Result, ok, err } from "./result";
 
 export const PIN_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const PIN_CACHE_COLLECTION = "pinLookupCache";
@@ -100,35 +101,34 @@ async function withFirestoreTimeout<T>(operation: Promise<T>): Promise<T> {
 
 /**
  * Retrieves a cached PIN lookup from Cloud Firestore.
- * Returns null on miss, expiry, timeout, or Firestore unavailability.
+ * Returns ok with data, or err on miss, expiry, timeout, or Firestore unavailability.
  * @param pin - The 6-digit Indian PIN code to look up.
  */
 export async function getCachedPin<T extends object = Record<string, unknown>>(
   pin: string,
-): Promise<T | null> {
+): Promise<Result<T>> {
   const db = getFirestoreClient();
   if (!db) {
-    return null;
+    return err("Firestore client unavailable");
   }
 
   try {
     const snapshot = await withFirestoreTimeout(db.collection(PIN_CACHE_COLLECTION).doc(pin).get());
     if (!snapshot.exists) {
-      return null;
+      return err("Cache miss: PIN not found in cache");
     }
 
     const payload = snapshot.data();
     if (!isSafePinDocument(payload) || isExpired(payload.expiresAt)) {
-      return null;
+      return err("Cache miss: Document expired or malformed");
     }
 
-    return payload.data as T;
+    return ok(payload.data as T);
   } catch (error) {
-    console.warn("Firestore PIN cache read failed", {
-      service: "firestore",
-      reason: error instanceof Error ? error.message : "unknown",
-    });
-    return null;
+    return err(
+      "Firestore PIN cache read failed",
+      error instanceof Error ? error : new Error(String(error))
+    );
   }
 }
 

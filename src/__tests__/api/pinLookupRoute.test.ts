@@ -30,15 +30,18 @@ describe("POST /api/pin-lookup", () => {
 
   it("returns a cached PIN mapping without writing to Firestore", async () => {
     mockGetCachedPin.mockResolvedValue({
-      state: "DL",
-      pollingPlace: {
-        name: "Cached School",
-        address: "Connaught Place",
-        city: "New Delhi",
-        pin: "110001",
-        lat: 28.6315,
-        lng: 77.2167,
-        distance: 0.3,
+      ok: true,
+      value: {
+        state: "DL",
+        pollingPlace: {
+          name: "Cached School",
+          address: "Connaught Place",
+          city: "New Delhi",
+          pin: "110001",
+          lat: 28.6315,
+          lng: 77.2167,
+          distance: 0.3,
+        },
       },
     });
 
@@ -55,7 +58,7 @@ describe("POST /api/pin-lookup", () => {
   });
 
   it("caches a local PIN mapping on cache miss", async () => {
-    mockGetCachedPin.mockResolvedValue(null);
+    mockGetCachedPin.mockResolvedValue({ ok: false, message: 'Cache miss', error: new Error('Cache miss') });
 
     const response = await POST(pinLookupRequest({ pin: "110001" }));
     const json = await responseJson(response);
@@ -73,7 +76,7 @@ describe("POST /api/pin-lookup", () => {
   });
 
   it("returns a miss for an unmapped but valid PIN", async () => {
-    mockGetCachedPin.mockResolvedValue(null);
+    mockGetCachedPin.mockResolvedValue({ ok: false, message: 'Cache miss', error: new Error('Cache miss') });
 
     const response = await POST(pinLookupRequest({ pin: "999999" }));
     const json = await responseJson(response);

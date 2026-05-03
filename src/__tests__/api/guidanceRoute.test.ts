@@ -61,7 +61,7 @@ describe('POST /api/guidance', () => {
 
   it('translates Gemini guidance when a supported non-English language is requested', async () => {
     mockGenerateGuidance.mockResolvedValue('English guidance');
-    mockTranslateText.mockResolvedValue({ text: 'Hindi guidance', translated: true });
+    mockTranslateText.mockResolvedValue({ ok: true, value: { text: 'Hindi guidance', translated: true } });
 
     const response = await POST(guidanceRequest({ stateCode: 'DL', language: 'hi' }));
     const json = await responseJson(response);
@@ -78,7 +78,7 @@ describe('POST /api/guidance', () => {
 
   it('returns English when translation is unavailable', async () => {
     mockGenerateGuidance.mockResolvedValue('English guidance');
-    mockTranslateText.mockResolvedValue({ text: 'English guidance', translated: false });
+    mockTranslateText.mockResolvedValue({ ok: false, message: 'Translation failed', error: new Error('Translation failed') });
 
     const response = await POST(guidanceRequest({ stateCode: 'DL', language: 'hi' }));
     const json = await responseJson(response);

@@ -2,6 +2,7 @@
  * Universal Geocoding Utility
  * Resolves any Indian PIN code to a State and Coordinates using Google Maps Geocoding.
  */
+import { Result, ok, err } from './result';
 
 export interface GeocodedLocation {
   state: string;
@@ -57,11 +58,10 @@ const STATE_NAME_TO_CODE: Record<string, string> = {
   "West Bengal": "WB",
 };
 
-export async function resolvePinToState(pin: string): Promise<GeocodedLocation | null> {
+export async function resolvePinToState(pin: string): Promise<Result<GeocodedLocation>> {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
-    console.error("Geocoding failed: Missing API Key");
-    return null;
+    return err("Geocoding failed: Missing API Key");
   }
 
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${pin},India&key=${apiKey}`;
@@ -71,7 +71,7 @@ export async function resolvePinToState(pin: string): Promise<GeocodedLocation |
     const data = await response.json();
 
     if (data.status !== "OK" || !data.results.length) {
-      return null;
+      return err(`Geocoding returned status: ${data.status}`);
     }
 
     const result = data.results[0];
@@ -82,19 +82,18 @@ export async function resolvePinToState(pin: string): Promise<GeocodedLocation |
       c.types.includes("administrative_area_level_1")
     );
 
-    if (!stateComponent) return null;
+    if (!stateComponent) return err("State not found in geocoding results");
 
     const stateName = stateComponent.long_name;
     const stateCode = STATE_NAME_TO_CODE[stateName] || stateName; // Fallback to name if code not found
 
-    return {
+    return ok({
       state: stateCode,
       lat: result.geometry.location.lat,
       lng: result.geometry.location.lng,
       formattedAddress: result.formatted_address,
-    };
+    });
   } catch (error) {
-    console.error("Geocoding request error:", error);
-    return null;
+    return err("Geocoding request error", error instanceof Error ? error : new Error(String(error)));
   }
 }

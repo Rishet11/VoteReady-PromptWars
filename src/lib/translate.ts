@@ -7,6 +7,7 @@
 
 import { TranslationServiceClient } from '@google-cloud/translate';
 import type { SupportedLanguageCode } from './languages';
+import { Result, ok, err } from './result';
 
 const location = 'global';
 const TRANSLATION_TIMEOUT_MS = 3000;
@@ -34,17 +35,17 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string)
 
 /**
  * Translates text to a supported Indian language using Google Cloud Translation API.
- * Returns the original text with `translated: false` if translation is unavailable.
+ * Returns ok with translated result or err on failure.
  * @param text - The English source text to translate.
  * @param targetLanguageCode - The target language code (hi, bn, te, ta).
  */
 export async function translateText(
   text: string,
   targetLanguageCode: Exclude<SupportedLanguageCode, 'en'>
-): Promise<TranslationResult> {
+): Promise<Result<TranslationResult>> {
   const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
   if (!projectId) {
-    return { text, translated: false };
+    return err("Translation failed: Missing Project ID");
   }
 
   try {
@@ -65,26 +66,15 @@ export async function translateText(
     if (response.translations && response.translations.length > 0) {
       const translatedText = response.translations[0]?.translatedText;
       if (translatedText) {
-        console.info(JSON.stringify({
-          severity: 'INFO',
-          message: 'Translation service heartbeat: Text translated',
-          service: 'google-cloud-translation',
-          targetLanguage: targetLanguageCode,
-          status: 'success',
-          timestamp: new Date().toISOString(),
-        }));
-        return { text: translatedText, translated: true };
+        return ok({ text: translatedText, translated: true });
       }
     }
 
-    return { text, translated: false };
+    return err("Translation failed: No translation returned");
   } catch (error) {
-    console.warn(JSON.stringify({
-      severity: 'WARNING',
-      message: 'Translation service heartbeat: Fallback triggered',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString(),
-    }));
-    return { text, translated: false };
+    return err(
+      "Translation service failed",
+      error instanceof Error ? error : new Error(String(error))
+    );
   }
 }
